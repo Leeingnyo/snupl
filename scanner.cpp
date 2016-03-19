@@ -50,20 +50,44 @@ using namespace std;
 #define TOKEN_STRLEN 16
 
 char ETokenName[][TOKEN_STRLEN] = {
-  "tDigit",                         ///< a digit
-  "tLetter",                        ///< a letter
-  "tPlusMinus",                     ///< '+' or '-'
-  "tMulDiv",                        ///< '*' or '/'
-  "tRelOp",                         ///< relational operator
-  "tAssign",                        ///< assignment operator
-  "tSemicolon",                     ///< a semicolon
-  "tDot",                           ///< a dot
-  "tLBrak",                         ///< a left bracket
-  "tRBrak",                         ///< a right bracket
+  "tTermOp"                         ///< '+' or '-' or '||'
+  "tFactOp"                         ///< '*' or '/' or '&&'
+  "tRelOp"                          ///< relational operator
+  "tAssign"                         ///< assignment operator
+  "tSemicolon"                      ///< a semicolon
+  "tDot"                            ///< a dot
+  "tComma"                          ///< a comma
+  "tLBrak"                          ///< a left bracket
+  "tRBrak"                          ///< a right bracket
+  "tLSBrak"                         ///< a left square bracket
+  "tRSBrak"                         ///< a right square bracket
+  "tCompl"                          ///< complement operator
+  "tComment"                        ///< comment
 
-  "tEOF",                           ///< end of file
-  "tIOError",                       ///< I/O error
-  "tUndefined",                     ///< undefined
+  "tModule"                         ///< 'module' keyword
+  "tBegin"                          ///< 'begin' keyword
+  "tEnd"                            ///< 'end' keyword
+  "tBoolean"                        ///< 'true' or 'false'
+  "tBaseType"                       ///< 'character' or 'boolean' or 'integer'
+  "tIf"                             ///< 'if' keyword
+  "tThen"                           ///< 'then' keyword
+  "tElse"                           ///< 'else' keyword
+  "tWhile"                          ///< 'while' keyword
+  "tDo"                             ///< 'do' keyword
+  "tReturn"                         ///< 'return' keyword
+  "tVar"                            ///< 'var' keyword
+  "tColon"                          ///< 'colon' keyword
+  "tProcedure"                      ///< 'procedure' keyword
+  "tFunction"                       ///< 'function' keyword
+
+  "tChar"                           ///< a character
+  "tString"                         ///< a string
+  "tId"                             ///< a identifier
+  "tNumber"                         ///< a number
+
+  "tEOF"                            ///< end of file
+  "tIOError"                        ///< I/O error
+  "tUndefined (%s)"                 ///< undefined
 };
 
 
@@ -72,20 +96,44 @@ char ETokenName[][TOKEN_STRLEN] = {
 //
 
 char ETokenStr[][TOKEN_STRLEN] = {
-  "tDigit (%s)",                    ///< a digit
-  "tLetter (%s)",                   ///< a letter
-  "tPlusMinus (%s)",                ///< '+' or '-'
-  "tMulDiv (%s)",                   ///< '*' or '/'
-  "tRelOp (%s)",                    ///< relational operator
-  "tAssign",                        ///< assignment operator
-  "tSemicolon",                     ///< a semicolon
-  "tDot",                           ///< a dot
-  "tLBrak",                         ///< a left bracket
-  "tRBrak",                         ///< a right bracket
+  "tTermOp (%s)"                    ///< '+' or '-' or '||'
+  "tFactOp (%s)"                    ///< '*' or '/' or '&&'
+  "tRelOp (%s)"                     ///< relational operator
+  "tAssign"                         ///< assignment operator
+  "tSemicolon"                      ///< a semicolon
+  "tDot"                            ///< a dot
+  "tComma"                          ///< a comma
+  "tLBrak"                          ///< a left bracket
+  "tRBrak"                          ///< a right bracket
+  "tLSBrak"                         ///< a left square bracket
+  "tRSBrak"                         ///< a right square bracket
+  "tCompl"                          ///< complement operator
+  "tComment (%s)"                   ///< comment
 
-  "tEOF",                           ///< end of file
-  "tIOError",                       ///< I/O error
-  "tUndefined (%s)",                ///< undefined
+  "tModule"                         ///< 'module' keyword
+  "tBegin"                          ///< 'begin' keyword
+  "tEnd"                            ///< 'end' keyword
+  "tBoolean"                        ///< 'true' or 'false'
+  "tBaseType"                       ///< 'character' or 'boolean' or 'integer'
+  "tIf"                             ///< 'if' keyword
+  "tThen"                           ///< 'then' keyword
+  "tElse"                           ///< 'else' keyword
+  "tWhile"                          ///< 'while' keyword
+  "tDo"                             ///< 'do' keyword
+  "tReturn"                         ///< 'return' keyword
+  "tVar"                            ///< 'var' keyword
+  "tColon"                          ///< 'colon' keyword
+  "tProcedure"                      ///< 'procedure' keyword
+  "tFunction"                       ///< 'function' keyword
+
+  "tChar (%s)"                      ///< a character
+  "tString (%s)"                    ///< a string
+  "tId (%s)"                        ///< a identifier
+  "tNumber (%s)"                    ///< a number
+
+  "tEOF"                            ///< end of file
+  "tIOError"                        ///< I/O error
+  "tUndefined (%s)"                 ///< undefined
 };
 
 
