@@ -49,7 +49,7 @@ using namespace std;
 /// each member of this enumeration represents a token in SnuPL/0
 ///
 enum EToken {
-  tTermOp,                          ///< '+' or '-' or '||'
+  tTermOp = 0,                      ///< '+' or '-' or '||'
   tFactOp,                          ///< '*' or '/' or '&&'
   tRelOp,                           ///< relational operator
   tAssign,                          ///< assignment operator
