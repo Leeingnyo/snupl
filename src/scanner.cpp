@@ -370,16 +370,36 @@ CToken* CScanner::Scan()
     case '.':
       token = tDot;
       break;
+    case ',':
+      token = tComma;
+      break;
 
     case '(':
       token = tLBrak;
       break;
-
     case ')':
       token = tRBrak;
       break;
+    case '[':
+      token = tLSBrak;
+      break;
+    case ']':
+      token = tRSBrak;
+      break;
 
-    //TODO: code all the special characters' token
+    case '!':
+      token = tCompl;
+      break;
+
+    case '<':
+    case '>':
+      if (_in->peek() == '=') {
+        tokval += GetChar();
+      }
+    case '#':
+    case '=':
+      token = tRelOp;
+      break;
 
     case '"':
     //TODO: make tString
