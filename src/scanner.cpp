@@ -55,6 +55,7 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tRelOp",                         ///< relational operator
   "tAssign",                        ///< assignment operator
   "tSemicolon",                     ///< a semicolon
+  "tColon",                         ///< a colon
   "tDot",                           ///< a dot
   "tComma",                         ///< a comma
   "tLBrak",                         ///< a left bracket
@@ -76,7 +77,6 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tDo",                            ///< 'do' keyword
   "tReturn",                        ///< 'return' keyword
   "tVar",                           ///< 'var' keyword
-  "tColon",                         ///< 'colon' keyword
   "tProcedure",                     ///< 'procedure' keyword
   "tFunction",                      ///< 'function' keyword
 
@@ -101,6 +101,7 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tRelOp (%s)",                    ///< relational operator
   "tAssign",                        ///< assignment operator
   "tSemicolon",                     ///< a semicolon
+  "tColon",                         ///< a colon
   "tDot",                           ///< a dot
   "tComma",                         ///< a comma
   "tLBrak",                         ///< a left bracket
@@ -122,7 +123,6 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tDo",                            ///< 'do' keyword
   "tReturn",                        ///< 'return' keyword
   "tVar",                           ///< 'var' keyword
-  "tColon",                         ///< 'colon' keyword
   "tProcedure",                     ///< 'procedure' keyword
   "tFunction",                      ///< 'function' keyword
 

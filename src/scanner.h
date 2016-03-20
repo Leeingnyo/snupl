@@ -64,7 +64,6 @@ enum EToken {
   tCompl,                           ///< complement operator
   tComment,                         ///< comment
 
-
   tModule,                          ///< 'module' keyword
   tBegin,                           ///< 'begin' keyword
   tEnd,                             ///< 'end' keyword
