@@ -1,2 +1,3 @@
 obj/*.o
 test_scanner
+.DS_Store
