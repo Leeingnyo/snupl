@@ -406,8 +406,76 @@ CToken* CScanner::Scan()
 
     case '"':
     //TODO: make tString
-    case '\'':
-    //TOOD: make tChar
+    case '\'': {
+      bool isEscape = false;
+      bool isValid = false;
+      while (true) {
+        char lookAhead = _in->peek();
+        if (isEscape){
+          isEscape = false;
+          if (lookAhead == 'n'){
+            GetChar();
+            tokval = '\n';
+            isValid = true;
+          } else
+          if (lookAhead == 't'){
+            GetChar();
+            tokval = '\t';
+            isValid = true;
+          } else
+          if (lookAhead == '\''){
+            GetChar();
+            tokval = '\'';
+            isValid = true;
+          } else
+          if (lookAhead == '\"'){
+            GetChar();
+            tokval = '\"';
+            isValid = true;
+          } else
+          if (lookAhead == '\\'){
+            GetChar();
+            tokval = '\\';
+            isValid = true;
+          } else
+          if (lookAhead == '0'){
+            GetChar();
+            tokval = '\0';
+            isValid = true;
+          } else {
+            tokval += GetChar();
+          }
+        } else
+        if (lookAhead == '\''){
+          if (isValid){
+            GetChar();
+            token = tChar;
+          } else {
+            tokval += GetChar();
+            tokval = "invalid token '" + tokval + "'";
+          }
+          break;
+        } else
+        if (lookAhead == '\n'){
+          GetChar();
+          tokval = "missing terminating ' character";
+          break;
+        } else
+        if (lookAhead == '\\'){
+          tokval += GetChar();
+          isEscape = true;
+        } else {
+          if (tokval == "\'"){
+            tokval = GetChar();
+            isValid = true;
+          } else {
+            tokval += GetChar();
+            isValid = false;
+          }
+        }
+      }
+      break;
+    }
     default:
       if (IsDigit(c)) {
         while (true) {
