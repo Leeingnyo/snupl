@@ -361,6 +361,7 @@ CToken* CScanner::Scan()
       } else {
         token = tFactOp;
       }
+      break;
 
     case ':':
       if (_in->peek() == '=') {
