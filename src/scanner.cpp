@@ -113,8 +113,8 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tModule",                        ///< 'module' keyword
   "tBegin",                         ///< 'begin' keyword
   "tEnd",                           ///< 'end' keyword
-  "tBoolean",                       ///< 'true' or 'false'
-  "tBaseType",                      ///< 'character' or 'boolean' or 'integer'
+  "tBoolean (%s)",                  ///< 'true' or 'false'
+  "tBaseType (%s)",                 ///< 'character' or 'boolean' or 'integer'
   "tIf",                            ///< 'if' keyword
   "tThen",                          ///< 'then' keyword
   "tElse",                          ///< 'else' keyword
