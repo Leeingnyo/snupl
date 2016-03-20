@@ -54,6 +54,7 @@ enum EToken {
   tRelOp,                           ///< relational operator
   tAssign,                          ///< assignment operator
   tSemicolon,                       ///< a semicolon
+  tColon,                           ///< a colon
   tDot,                             ///< a dot
   tComma,                           ///< a comma
   tLBrak,                           ///< a left bracket
@@ -62,6 +63,7 @@ enum EToken {
   tRSBrak,                          ///< a right square bracket
   tCompl,                           ///< complement operator
   tComment,                         ///< comment
+
 
   tModule,                          ///< 'module' keyword
   tBegin,                           ///< 'begin' keyword
@@ -75,7 +77,6 @@ enum EToken {
   tDo,                              ///< 'do' keyword
   tReturn,                          ///< 'return' keyword
   tVar,                             ///< 'var' keyword
-  tColon,                           ///< 'colon' keyword
   tProcedure,                       ///< 'procedure' keyword
   tFunction,                        ///< 'function' keyword
 
