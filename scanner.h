@@ -306,6 +306,20 @@ class CScanner {
     /// @retval false character is not white space
     bool IsWhite(char c) const;
 
+    /// @brief check if a character is a letter
+    ///
+    /// @param c character
+    /// @retval true character is a letter
+    /// @retval false character is not a letter
+    bool IsLetter(char c) const;
+
+    /// @brief check if a character is a digit
+    ///
+    /// @param c character
+    /// @retval true character is a digit
+    /// @retval false character is not a digit
+    bool IsDigit(char c) const;
+
     /// @}
 
 
