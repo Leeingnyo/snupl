@@ -387,10 +387,26 @@ CToken* CScanner::Scan()
     //TOOD: make tChar
     default:
       if (IsDigit(c)) {
-        //TODO: make tNumber
+        while (true) {
+          char lookAhead = _in->peek();
+          if (IsDigit(lookAhead)) {
+            tokval += GetChar();
+          } else {
+            break;
+          }
+        }
+        token = tNumber;
       } else
       if (IsLetter(c)) {
-        //TODO: make tID or keyword tokens
+        while (true) {
+          char lookAhead = _in->peek();
+          if (IsLetter(lookAhead) || IsDigit(lookAhead)) {
+            tokval += GetChar();
+          } else {
+            break;
+          }
+        }
+        token = TokenForIdentifier(tokval);
       } else {
         tokval = "invalid character '";
         tokval += c;
@@ -429,4 +445,22 @@ bool CScanner::IsLetter(char c) const
 bool CScanner::IsDigit(char c) const
 {
   return (c >= '0') && (c <= '9');
+}
+EToken CScanner::TokenForIdentifier(string s) const
+{
+  if (s == "module") return tModule;
+  else if (s == "begin") return tBegin;
+  else if (s == "end") return tEnd;
+  else if (s == "true" || s == "false") return tBoolean;
+  else if (s == "character" || s == "boolean" || s == "integer") return tBaseType;
+  else if (s == "if") return tIf;
+  else if (s == "then") return tThen;
+  else if (s == "else") return tElse;
+  else if (s == "while") return tWhile;
+  else if (s == "do") return tDo;
+  else if (s == "return") return tReturn;
+  else if (s == "var") return tVar;
+  else if (s == "procedure") return tProcedure;
+  else if (s == "function") return tFunction;
+  else return tId;
 }
