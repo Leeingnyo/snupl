@@ -404,8 +404,64 @@ CToken* CScanner::Scan()
       token = tRelOp;
       break;
 
-    case '"':
-    //TODO: make tString
+    case '"': {
+      bool isEscape = false;
+      bool isValid = true;
+      tokval = "";
+      while (true) {
+        char lookAhead = _in->peek();
+        if (isEscape){
+          isEscape = false;
+          if (lookAhead == 'n'){
+            GetChar();
+            tokval += '\n';
+          } else
+          if (lookAhead == 't'){
+            GetChar();
+            tokval += '\t';
+          } else
+          if (lookAhead == '\''){
+            GetChar();
+            tokval += '\'';
+          } else
+          if (lookAhead == '\"'){
+            GetChar();
+            tokval += '\"';
+          } else
+          if (lookAhead == '\\'){
+            GetChar();
+            tokval += '\\';
+          } else
+          if (lookAhead == '0'){
+            GetChar();
+            tokval += '\0';
+          } else {
+            tokval += '\\' + GetChar();
+            isValid = false;
+          }
+        } else
+        if (lookAhead == '\"'){
+          GetChar();
+          if (isValid)
+            token = tString;
+          else
+            tokval = "invalid token \"" + tokval + "\"";
+          break;
+        } else
+        if (lookAhead == '\n'){
+          GetChar();
+          tokval = "missing terminating \" character";
+          break;
+        } else
+        if (lookAhead == '\\'){
+          GetChar();
+          isEscape = true;
+        } else {
+          tokval += GetChar();
+        }
+      }
+      break;
+    }
     case '\'': {
       bool isEscape = false;
       bool isValid = false;
