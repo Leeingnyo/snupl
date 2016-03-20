@@ -50,43 +50,43 @@ using namespace std;
 #define TOKEN_STRLEN 16
 
 char ETokenName[][TOKEN_STRLEN] = {
-  "tTermOp"                         ///< '+' or '-' or '||'
-  "tFactOp"                         ///< '*' or '/' or '&&'
-  "tRelOp"                          ///< relational operator
-  "tAssign"                         ///< assignment operator
-  "tSemicolon"                      ///< a semicolon
-  "tDot"                            ///< a dot
-  "tComma"                          ///< a comma
-  "tLBrak"                          ///< a left bracket
-  "tRBrak"                          ///< a right bracket
-  "tLSBrak"                         ///< a left square bracket
-  "tRSBrak"                         ///< a right square bracket
-  "tCompl"                          ///< complement operator
-  "tComment"                        ///< comment
+  "tTermOp",                        ///< '+' or '-' or '||'
+  "tFactOp",                        ///< '*' or '/' or '&&'
+  "tRelOp",                         ///< relational operator
+  "tAssign",                        ///< assignment operator
+  "tSemicolon",                     ///< a semicolon
+  "tDot",                           ///< a dot
+  "tComma",                         ///< a comma
+  "tLBrak",                         ///< a left bracket
+  "tRBrak",                         ///< a right bracket
+  "tLSBrak",                        ///< a left square bracket
+  "tRSBrak",                        ///< a right square bracket
+  "tCompl",                         ///< complement operator
+  "tComment",                       ///< comment
 
-  "tModule"                         ///< 'module' keyword
-  "tBegin"                          ///< 'begin' keyword
-  "tEnd"                            ///< 'end' keyword
-  "tBoolean"                        ///< 'true' or 'false'
-  "tBaseType"                       ///< 'character' or 'boolean' or 'integer'
-  "tIf"                             ///< 'if' keyword
-  "tThen"                           ///< 'then' keyword
-  "tElse"                           ///< 'else' keyword
-  "tWhile"                          ///< 'while' keyword
-  "tDo"                             ///< 'do' keyword
-  "tReturn"                         ///< 'return' keyword
-  "tVar"                            ///< 'var' keyword
-  "tColon"                          ///< 'colon' keyword
-  "tProcedure"                      ///< 'procedure' keyword
-  "tFunction"                       ///< 'function' keyword
+  "tModule",                        ///< 'module' keyword
+  "tBegin",                         ///< 'begin' keyword
+  "tEnd",                           ///< 'end' keyword
+  "tBoolean",                       ///< 'true' or 'false'
+  "tBaseType",                      ///< 'character' or 'boolean' or 'integer'
+  "tIf",                            ///< 'if' keyword
+  "tThen",                          ///< 'then' keyword
+  "tElse",                          ///< 'else' keyword
+  "tWhile",                         ///< 'while' keyword
+  "tDo",                            ///< 'do' keyword
+  "tReturn",                        ///< 'return' keyword
+  "tVar",                           ///< 'var' keyword
+  "tColon",                         ///< 'colon' keyword
+  "tProcedure",                     ///< 'procedure' keyword
+  "tFunction",                      ///< 'function' keyword
 
-  "tChar"                           ///< a character
-  "tString"                         ///< a string
-  "tId"                             ///< a identifier
-  "tNumber"                         ///< a number
+  "tChar",                          ///< a character
+  "tString",                        ///< a string
+  "tId",                            ///< a identifier
+  "tNumber",                        ///< a number
 
-  "tEOF"                            ///< end of file
-  "tIOError"                        ///< I/O error
+  "tEOF",                           ///< end of file
+  "tIOError",                       ///< I/O error
   "tUndefined (%s)"                 ///< undefined
 };
 
@@ -96,43 +96,43 @@ char ETokenName[][TOKEN_STRLEN] = {
 //
 
 char ETokenStr[][TOKEN_STRLEN] = {
-  "tTermOp (%s)"                    ///< '+' or '-' or '||'
-  "tFactOp (%s)"                    ///< '*' or '/' or '&&'
-  "tRelOp (%s)"                     ///< relational operator
-  "tAssign"                         ///< assignment operator
-  "tSemicolon"                      ///< a semicolon
-  "tDot"                            ///< a dot
-  "tComma"                          ///< a comma
-  "tLBrak"                          ///< a left bracket
-  "tRBrak"                          ///< a right bracket
-  "tLSBrak"                         ///< a left square bracket
-  "tRSBrak"                         ///< a right square bracket
-  "tCompl"                          ///< complement operator
-  "tComment (%s)"                   ///< comment
+  "tTermOp (%s)",                   ///< '+' or '-' or '||'
+  "tFactOp (%s)",                   ///< '*' or '/' or '&&'
+  "tRelOp (%s)",                    ///< relational operator
+  "tAssign",                        ///< assignment operator
+  "tSemicolon",                     ///< a semicolon
+  "tDot",                           ///< a dot
+  "tComma",                         ///< a comma
+  "tLBrak",                         ///< a left bracket
+  "tRBrak",                         ///< a right bracket
+  "tLSBrak",                        ///< a left square bracket
+  "tRSBrak",                        ///< a right square bracket
+  "tCompl",                         ///< complement operator
+  "tComment (%s)",                  ///< comment
 
-  "tModule"                         ///< 'module' keyword
-  "tBegin"                          ///< 'begin' keyword
-  "tEnd"                            ///< 'end' keyword
-  "tBoolean"                        ///< 'true' or 'false'
-  "tBaseType"                       ///< 'character' or 'boolean' or 'integer'
-  "tIf"                             ///< 'if' keyword
-  "tThen"                           ///< 'then' keyword
-  "tElse"                           ///< 'else' keyword
-  "tWhile"                          ///< 'while' keyword
-  "tDo"                             ///< 'do' keyword
-  "tReturn"                         ///< 'return' keyword
-  "tVar"                            ///< 'var' keyword
-  "tColon"                          ///< 'colon' keyword
-  "tProcedure"                      ///< 'procedure' keyword
-  "tFunction"                       ///< 'function' keyword
+  "tModule",                        ///< 'module' keyword
+  "tBegin",                         ///< 'begin' keyword
+  "tEnd",                           ///< 'end' keyword
+  "tBoolean",                       ///< 'true' or 'false'
+  "tBaseType",                      ///< 'character' or 'boolean' or 'integer'
+  "tIf",                            ///< 'if' keyword
+  "tThen",                          ///< 'then' keyword
+  "tElse",                          ///< 'else' keyword
+  "tWhile",                         ///< 'while' keyword
+  "tDo",                            ///< 'do' keyword
+  "tReturn",                        ///< 'return' keyword
+  "tVar",                           ///< 'var' keyword
+  "tColon",                         ///< 'colon' keyword
+  "tProcedure",                     ///< 'procedure' keyword
+  "tFunction",                      ///< 'function' keyword
 
-  "tChar (%s)"                      ///< a character
-  "tString (%s)"                    ///< a string
-  "tId (%s)"                        ///< a identifier
-  "tNumber (%s)"                    ///< a number
+  "tChar (%s)",                     ///< a character
+  "tString (%s)",                   ///< a string
+  "tId (%s)",                       ///< a identifier
+  "tNumber (%s)",                   ///< a number
 
-  "tEOF"                            ///< end of file
-  "tIOError"                        ///< I/O error
+  "tEOF",                           ///< end of file
+  "tIOError",                       ///< I/O error
   "tUndefined (%s)"                 ///< undefined
 };
 
@@ -334,7 +334,7 @@ CToken* CScanner::Scan()
   token = tUndefined;
 
   switch (c) {
-    case '|'
+    case '|':
       if (_in->peek() != '|')
         break;
       tokval += GetChar();
@@ -343,7 +343,7 @@ CToken* CScanner::Scan()
       token = tTermOp;
       break;
 
-    case '&'
+    case '&':
       if (_in->peek() != '&')
         break;
       tokval += GetChar();
