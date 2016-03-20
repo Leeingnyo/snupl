@@ -352,7 +352,15 @@ CToken* CScanner::Scan()
       break;
 
     case '/':
-    //TODO: make tComment or tFactOp
+      if (_in->peek() == '/') {
+        tokval += GetChar();
+        while (_in->peek() != '\n' && !(_in->eof()) ) {
+          tokval += GetChar();
+        }
+        token = tComment;
+      } else {
+        token = tFactOp;
+      }
 
     case ':':
       if (_in->peek() == '=') {
