@@ -55,6 +55,7 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tRelOp",                         ///< relational operator
   "tAssign",                        ///< assignment operator
   "tSemicolon",                     ///< a semicolon
+  "tColon",                         ///< a colon
   "tDot",                           ///< a dot
   "tComma",                         ///< a comma
   "tLBrak",                         ///< a left bracket
@@ -75,7 +76,6 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tDo",                            ///< 'do' keyword
   "tReturn",                        ///< 'return' keyword
   "tVar",                           ///< 'var' keyword
-  "tColon",                         ///< 'colon' keyword
   "tProcedure",                     ///< 'procedure' keyword
   "tFunction",                      ///< 'function' keyword
 
@@ -100,6 +100,7 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tRelOp (%s)",                    ///< relational operator
   "tAssign",                        ///< assignment operator
   "tSemicolon",                     ///< a semicolon
+  "tColon",                         ///< a colon
   "tDot",                           ///< a dot
   "tComma",                         ///< a comma
   "tLBrak",                         ///< a left bracket
@@ -111,8 +112,8 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tModule",                        ///< 'module' keyword
   "tBegin",                         ///< 'begin' keyword
   "tEnd",                           ///< 'end' keyword
-  "tBoolean",                       ///< 'true' or 'false'
-  "tBaseType",                      ///< 'character' or 'boolean' or 'integer'
+  "tBoolean (%s)",                  ///< 'true' or 'false'
+  "tBaseType (%s)",                 ///< 'character' or 'boolean' or 'integer'
   "tIf",                            ///< 'if' keyword
   "tThen",                          ///< 'then' keyword
   "tElse",                          ///< 'else' keyword
@@ -120,7 +121,6 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tDo",                            ///< 'do' keyword
   "tReturn",                        ///< 'return' keyword
   "tVar",                           ///< 'var' keyword
-  "tColon",                         ///< 'colon' keyword
   "tProcedure",                     ///< 'procedure' keyword
   "tFunction",                      ///< 'function' keyword
 
@@ -373,16 +373,36 @@ CToken* CScanner::Scan()
     case '.':
       token = tDot;
       break;
+    case ',':
+      token = tComma;
+      break;
 
     case '(':
       token = tLBrak;
       break;
-
     case ')':
       token = tRBrak;
       break;
+    case '[':
+      token = tLSBrak;
+      break;
+    case ']':
+      token = tRSBrak;
+      break;
 
-    //TODO: code all the special characters' token
+    case '!':
+      token = tCompl;
+      break;
+
+    case '<':
+    case '>':
+      if (_in->peek() == '=') {
+        tokval += GetChar();
+      }
+    case '#':
+    case '=':
+      token = tRelOp;
+      break;
 
     case '"':
     //TODO: make tString
@@ -390,10 +410,26 @@ CToken* CScanner::Scan()
     //TOOD: make tChar
     default:
       if (IsDigit(c)) {
-        //TODO: make tNumber
+        while (true) {
+          char lookAhead = _in->peek();
+          if (IsDigit(lookAhead)) {
+            tokval += GetChar();
+          } else {
+            break;
+          }
+        }
+        token = tNumber;
       } else
       if (IsLetter(c)) {
-        //TODO: make tID or keyword tokens
+        while (true) {
+          char lookAhead = _in->peek();
+          if (IsLetter(lookAhead) || IsDigit(lookAhead)) {
+            tokval += GetChar();
+          } else {
+            break;
+          }
+        }
+        token = TokenForIdentifier(tokval);
       } else {
         tokval = "invalid character '";
         tokval += c;
@@ -432,4 +468,22 @@ bool CScanner::IsLetter(char c) const
 bool CScanner::IsDigit(char c) const
 {
   return (c >= '0') && (c <= '9');
+}
+EToken CScanner::TokenForIdentifier(string s) const
+{
+  if (s == "module") return tModule;
+  else if (s == "begin") return tBegin;
+  else if (s == "end") return tEnd;
+  else if (s == "true" || s == "false") return tBoolean;
+  else if (s == "character" || s == "boolean" || s == "integer") return tBaseType;
+  else if (s == "if") return tIf;
+  else if (s == "then") return tThen;
+  else if (s == "else") return tElse;
+  else if (s == "while") return tWhile;
+  else if (s == "do") return tDo;
+  else if (s == "return") return tReturn;
+  else if (s == "var") return tVar;
+  else if (s == "procedure") return tProcedure;
+  else if (s == "function") return tFunction;
+  else return tId;
 }
