@@ -286,26 +286,33 @@ CToken* CScanner::Scan()
   token = tUndefined;
 
   switch (c) {
+    case '|'
+      if (_in->peek() != '|')
+        break;
+      tokval += GetChar();
+    case '+':
+    case '-':
+      token = tTermOp;
+      break;
+
+    case '&'
+      if (_in->peek() != '&')
+        break;
+      tokval += GetChar();
+    case '*':
+      token = tFactOp;
+      break;
+
+    case '/':
+    //TODO: make tComment or tFactOp
+
     case ':':
       if (_in->peek() == '=') {
         tokval += GetChar();
         token = tAssign;
+      } else {
+        token = tColon;
       }
-      break;
-
-    case '+':
-    case '-':
-      token = tPlusMinus;
-      break;
-
-    case '*':
-    case '/':
-      token = tMulDiv;
-      break;
-
-    case '=':
-    case '#':
-      token = tRelOp;
       break;
 
     case ';':
@@ -324,12 +331,18 @@ CToken* CScanner::Scan()
       token = tRBrak;
       break;
 
+    //TODO: code all the special characters' token
+
+    case '"':
+    //TODO: make tString
+    case '\'':
+    //TOOD: make tChar
     default:
-      if (('0' <= c) && (c <= '9')) {
-        token = tDigit;
+      if (IsDigit(c)) {
+        //TODO: make tNumber
       } else
-      if (('a' <= c) && (c <= 'z')) {
-        token = tLetter;
+      if (IsLetter(c)) {
+        //TODO: make tID or keyword tokens
       } else {
         tokval = "invalid character '";
         tokval += c;
@@ -358,4 +371,14 @@ string CScanner::GetChar(int n)
 bool CScanner::IsWhite(char c) const
 {
   return ((c == ' ') || (c == '\n'));
+}
+
+bool CScanner::IsLetter(char c) const
+{
+  return ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_');
+}
+
+bool CScanner::IsDigit(char c) const
+{
+  return (c >= '0') && (c <= '9');
 }
