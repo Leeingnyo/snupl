@@ -319,6 +319,13 @@ class CScanner {
     /// @retval false character is not a digit
     bool IsDigit(char c) const;
 
+    /// @brief make token for identifier string
+    ///
+    /// @param s string
+    /// @retval tId s is not a keyword
+    /// @retval EToken token s is a keyword
+    EToken TokenForIdentifier(string s) const;
+
     /// @}
 
 
