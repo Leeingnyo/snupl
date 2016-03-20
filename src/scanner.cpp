@@ -391,6 +391,16 @@ CToken* CScanner::Scan()
       token = tCompl;
       break;
 
+    case '<':
+    case '>':
+      if (_in->peek() == '=') {
+        tokval += GetChar();
+      }
+    case '#':
+    case '=':
+      token = tRelOp;
+      break;
+
     case '"':
     //TODO: make tString
     case '\'':
