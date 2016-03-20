@@ -62,8 +62,6 @@ enum EToken {
   tLSBrak,                          ///< a left square bracket
   tRSBrak,                          ///< a right square bracket
   tCompl,                           ///< complement operator
-  tComment,                         ///< comment
-
 
   tModule,                          ///< 'module' keyword
   tBegin,                           ///< 'begin' keyword

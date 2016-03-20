@@ -62,7 +62,6 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tLSBrak",                        ///< a left square bracket
   "tRSBrak",                        ///< a right square bracket
   "tCompl",                         ///< complement operator
-  "tComment",                       ///< comment
 
   "tModule",                        ///< 'module' keyword
   "tBegin",                         ///< 'begin' keyword
@@ -108,7 +107,6 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tLSBrak",                        ///< a left square bracket
   "tRSBrak",                        ///< a right square bracket
   "tCompl",                         ///< complement operator
-  "tComment (%s)",                  ///< comment
 
   "tModule",                        ///< 'module' keyword
   "tBegin",                         ///< 'begin' keyword
@@ -321,15 +319,22 @@ CToken* CScanner::Scan()
   EToken token;
   string tokval;
   char c;
+  while (true) {
+    while (_in->good() && IsWhite(_in->peek())) GetChar();
 
-  while (_in->good() && IsWhite(_in->peek())) GetChar();
+    RecordStreamPosition();
 
-  RecordStreamPosition();
+    if (_in->eof()) return NewToken(tEOF);
+    if (!_in->good()) return NewToken(tIOError);
 
-  if (_in->eof()) return NewToken(tEOF);
-  if (!_in->good()) return NewToken(tIOError);
+    c = GetChar();
+    if (c == '/' && _in->peek() == '/') {
+      while(_in->peek() != '\n' && !(_in->eof())) GetChar();
+      continue;
+    }
+    break;
+  }
 
-  c = GetChar();
   tokval = c;
   token = tUndefined;
 
@@ -348,19 +353,8 @@ CToken* CScanner::Scan()
         break;
       tokval += GetChar();
     case '*':
-      token = tFactOp;
-      break;
-
     case '/':
-      if (_in->peek() == '/') {
-        tokval += GetChar();
-        while (_in->peek() != '\n' && !(_in->eof()) ) {
-          tokval += GetChar();
-        }
-        token = tComment;
-      } else {
-        token = tFactOp;
-      }
+      token = tFactOp;
       break;
 
     case ':':
