@@ -325,10 +325,24 @@ class CScanner {
     /// @retval EToken token s is a keyword
     EToken TokenForIdentifier(string s) const;
 
+    /// @brief check if a string is unescapable
+    ///
+    /// @param s string
+    /// @retval true s is unescapable
+    /// @retval false s is not unescapable
     bool IsUnescapable(string s) const;
 
+    /// @brief make string by changing escaped characters
+    ///
+    /// @param s string
+    /// @retval string unescaped string
     string Unescape(string s) const;
 
+    /// @brief get characters (with escape special character) until stopc appears
+    ///
+    /// @param stopc char
+    /// @retval string characters until stopc
+    /// @retval string if char after backslash is EOF or EOL, return string including backslash
     string GetCharacterUntil(char stopc);
 
     /// @}
