@@ -325,6 +325,12 @@ class CScanner {
     /// @retval EToken token s is a keyword
     EToken TokenForIdentifier(string s) const;
 
+    bool IsUnescapable(string s) const;
+
+    string Unescape(string s) const;
+
+    string GetCharacterUntil(char stopc);
+
     /// @}
 
 

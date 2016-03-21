@@ -405,133 +405,48 @@ CToken* CScanner::Scan()
       break;
 
     case '"': {
-      bool isEscape = false;
-      bool isValid = true;
-      tokval = "";
-      while (true) {
-        char lookAhead = _in->peek();
-        if (isEscape){
-          isEscape = false;
-          if (lookAhead == 'n'){
-            GetChar();
-            tokval += '\n';
-          } else
-          if (lookAhead == 't'){
-            GetChar();
-            tokval += '\t';
-          } else
-          if (lookAhead == '\''){
-            GetChar();
-            tokval += '\'';
-          } else
-          if (lookAhead == '\"'){
-            GetChar();
-            tokval += '\"';
-          } else
-          if (lookAhead == '\\'){
-            GetChar();
-            tokval += '\\';
-          } else
-          if (lookAhead == '0'){
-            GetChar();
-            tokval += '\0';
-          } else {
-            tokval += '\\' + GetChar();
-            isValid = false;
-          }
-        } else
-        if (lookAhead == '\"'){
-          GetChar();
-          if (isValid)
-            token = tString;
-          else
-            tokval = "invalid token \"" + tokval + "\"";
-          break;
-        } else
-        if (lookAhead == '\n'){
-          GetChar();
-          tokval = "missing terminating \" character";
-          break;
-        } else
-        if (lookAhead == '\\'){
-          GetChar();
-          isEscape = true;
+      string str = GetCharacterUntil('"');
+      if (_in->peek() == '"') {
+        GetChar();
+        if (!IsUnescapable(str)) {
+          tokval = "unescapable string \"";
+          tokval += str;
+          tokval += "\"";
         } else {
-          tokval += GetChar();
+          tokval = Unescape(str);
+          token = tString;
         }
+      } else {
+        tokval = "No closing \"";
       }
       break;
     }
+
     case '\'': {
-      bool isEscape = false;
-      bool isValid = false;
-      while (true) {
-        char lookAhead = _in->peek();
-        if (isEscape){
-          isEscape = false;
-          if (lookAhead == 'n'){
-            GetChar();
-            tokval = '\n';
-            isValid = true;
-          } else
-          if (lookAhead == 't'){
-            GetChar();
-            tokval = '\t';
-            isValid = true;
-          } else
-          if (lookAhead == '\''){
-            GetChar();
-            tokval = '\'';
-            isValid = true;
-          } else
-          if (lookAhead == '\"'){
-            GetChar();
-            tokval = '\"';
-            isValid = true;
-          } else
-          if (lookAhead == '\\'){
-            GetChar();
-            tokval = '\\';
-            isValid = true;
-          } else
-          if (lookAhead == '0'){
-            GetChar();
-            tokval = '\0';
-            isValid = true;
-          } else {
-            tokval += GetChar();
-          }
-        } else
-        if (lookAhead == '\''){
-          if (isValid){
-            GetChar();
-            token = tChar;
-          } else {
-            tokval += GetChar();
-            tokval = "invalid token '" + tokval + "'";
-          }
-          break;
-        } else
-        if (lookAhead == '\n'){
-          GetChar();
-          tokval = "missing terminating ' character";
-          break;
-        } else
-        if (lookAhead == '\\'){
-          tokval += GetChar();
-          isEscape = true;
+      string str = GetCharacterUntil('\'');
+      if (_in->peek() == '\'') {
+        GetChar();
+        if (!IsUnescapable(str)) {
+          tokval = "unescapable string \"";
+          tokval += str;
+          tokval += "\"";
         } else {
-          if (tokval == "\'"){
-            tokval = GetChar();
-            isValid = true;
+          string unescapedStr = Unescape(str);
+          if (unescapedStr.length() != 1) {
+            tokval = "more than one character in string \"";
+            tokval += str;
+            tokval += "\"";
           } else {
-            tokval += GetChar();
-            isValid = false;
+            tokval = Unescape(str);
+            token = tString;
           }
         }
+      } else {
+        tokval = "No closing '";
       }
       break;
     }
+
     default:
       if (IsDigit(c)) {
         while (true) {
@@ -610,4 +525,65 @@ EToken CScanner::TokenForIdentifier(string s) const
   else if (s == "procedure") return tProcedure;
   else if (s == "function") return tFunction;
   else return tId;
+}
+
+bool CScanner::IsUnescapable(string s) const
+{
+  for (std::string::iterator it = s.begin() ; it != s.end(); it++) {
+    if ((*it) == '\\') {
+      it++;
+      if (it == s.end()) return false;
+      switch (*it) {
+      case 'n':
+      case 't':
+      case '0':
+      case '"':
+      case '\'':
+      case '\\':
+        break;
+      default:
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+string CScanner::Unescape(string s) const
+{
+  string retStr;
+  for (std::string::iterator it = s.begin() ; it != s.end(); it++) {
+    if ((*it) == '\\') {
+      it++;
+      if (it == s.end()) return retStr;
+      switch (*it) {
+      case 'n': retStr += '\n'; break;
+      case 't': retStr += '\t'; break;
+      case '0': retStr += '\0'; break;
+      case '"': retStr += '"'; break;
+      case '\'': retStr += '\''; break;
+      case '\\': retStr += '\\'; break;
+      default:
+        return retStr;
+      }
+    } else {
+      retStr += (*it);
+    }
+  }
+  return retStr;
+}
+
+string CScanner::GetCharacterUntil(char stopc) {
+  string str;
+  while (!(_in->eof()) && _in->peek() != '\n' && _in->peek() != stopc) {
+    char c = GetChar();
+    str += c;
+    if (c == '\\') {
+      if (!(_in->eof()) && _in->peek() != '\n') {
+        str += GetChar();
+      }
+      else return str;
+    }
+  }
+  return str;
 }
