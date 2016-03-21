@@ -404,10 +404,49 @@ CToken* CScanner::Scan()
       token = tRelOp;
       break;
 
-    case '"':
-    //TODO: make tString
-    case '\'':
-    //TOOD: make tChar
+    case '"': {
+      string str = GetCharacterUntil('"');
+      if (_in->peek() == '"') {
+        GetChar();
+        if (!IsUnescapable(str)) {
+          tokval = "unescapable string \"";
+          tokval += str;
+          tokval += "\"";
+        } else {
+          tokval = Unescape(str);
+          token = tString;
+        }
+      } else {
+        tokval = "No closing \"";
+      }
+      break;
+    }
+
+    case '\'': {
+      string str = GetCharacterUntil('\'');
+      if (_in->peek() == '\'') {
+        GetChar();
+        if (!IsUnescapable(str)) {
+          tokval = "unescapable string \"";
+          tokval += str;
+          tokval += "\"";
+        } else {
+          string unescapedStr = Unescape(str);
+          if (unescapedStr.length() != 1) {
+            tokval = "more than one character in string \"";
+            tokval += str;
+            tokval += "\"";
+          } else {
+            tokval = Unescape(str);
+            token = tString;
+          }
+        }
+      } else {
+        tokval = "No closing '";
+      }
+      break;
+    }
+
     default:
       if (IsDigit(c)) {
         while (true) {
@@ -486,4 +525,65 @@ EToken CScanner::TokenForIdentifier(string s) const
   else if (s == "procedure") return tProcedure;
   else if (s == "function") return tFunction;
   else return tId;
+}
+
+bool CScanner::IsUnescapable(string s) const
+{
+  for (std::string::iterator it = s.begin() ; it != s.end(); it++) {
+    if ((*it) == '\\') {
+      it++;
+      if (it == s.end()) return false;
+      switch (*it) {
+      case 'n':
+      case 't':
+      case '0':
+      case '"':
+      case '\'':
+      case '\\':
+        break;
+      default:
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+string CScanner::Unescape(string s) const
+{
+  string retStr;
+  for (std::string::iterator it = s.begin() ; it != s.end(); it++) {
+    if ((*it) == '\\') {
+      it++;
+      if (it == s.end()) return retStr;
+      switch (*it) {
+      case 'n': retStr += '\n'; break;
+      case 't': retStr += '\t'; break;
+      case '0': retStr += '\0'; break;
+      case '"': retStr += '"'; break;
+      case '\'': retStr += '\''; break;
+      case '\\': retStr += '\\'; break;
+      default:
+        return retStr;
+      }
+    } else {
+      retStr += (*it);
+    }
+  }
+  return retStr;
+}
+
+string CScanner::GetCharacterUntil(char stopc) {
+  string str;
+  while (!(_in->eof()) && _in->peek() != '\n' && _in->peek() != stopc) {
+    char c = GetChar();
+    str += c;
+    if (c == '\\') {
+      if (!(_in->eof()) && _in->peek() != '\n') {
+        str += GetChar();
+      }
+      else return str;
+    }
+  }
+  return str;
 }
