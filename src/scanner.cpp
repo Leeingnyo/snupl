@@ -496,7 +496,7 @@ string CScanner::GetChar(int n)
 
 bool CScanner::IsWhite(char c) const
 {
-  return ((c == ' ') || (c == '\n'));
+  return ((c == ' ') || (c == '\n') || (c == '\t'));
 }
 
 bool CScanner::IsLetter(char c) const
