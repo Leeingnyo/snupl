@@ -437,7 +437,7 @@ CToken* CScanner::Scan()
             tokval += str;
             tokval += "\"";
           } else {
-            tokval = Unescape(str);
+            tokval = unescapedStr;
             token = tString;
           }
         }
