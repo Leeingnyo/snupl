@@ -343,7 +343,7 @@ class CScanner {
     /// @param stopc char
     /// @retval string characters until stopc
     /// @retval string if char after backslash is EOF or EOL, return string including backslash
-    string GetCharacterUntil(char stopc);
+    string GetCharactersUntil(char stopc);
 
     /// @}
 

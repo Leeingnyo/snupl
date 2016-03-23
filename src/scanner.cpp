@@ -405,7 +405,7 @@ CToken* CScanner::Scan()
       break;
 
     case '"': {
-      string str = GetCharacterUntil('"');
+      string str = GetCharactersUntil('"');
       if (_in->peek() == '"') {
         GetChar();
         if (!IsUnescapable(str)) {
@@ -423,7 +423,7 @@ CToken* CScanner::Scan()
     }
 
     case '\'': {
-      string str = GetCharacterUntil('\'');
+      string str = GetCharactersUntil('\'');
       if (_in->peek() == '\'') {
         GetChar();
         if (!IsUnescapable(str)) {
@@ -573,7 +573,7 @@ string CScanner::Unescape(string s) const
   return retStr;
 }
 
-string CScanner::GetCharacterUntil(char stopc) {
+string CScanner::GetCharactersUntil(char stopc) {
   string str;
   while (!(_in->eof()) && _in->peek() != '\n' && _in->peek() != stopc) {
     char c = GetChar();
