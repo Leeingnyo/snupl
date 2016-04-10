@@ -1,11 +1,11 @@
 //------------------------------------------------------------------------------
-/// @brief SNUPL scanner test
+/// @brief SnuPL data initializers
 /// @author Bernhard Egger <bernhard@csap.snu.ac.kr>
 /// @section changelog Change Log
-/// 2012/09/14 Bernhard Egger created
+/// 2016/04/05 Bernhard Egger created
 ///
 /// @section license_section License
-/// Copyright (c) 2012-2016, Bernhard Egger
+/// Copyright (c) 2016, Bernhard Egger
 /// All rights reserved.
 ///
 /// Redistribution and use in source and binary forms,  with or without modifi-
@@ -30,36 +30,43 @@
 /// DAMAGE.
 //------------------------------------------------------------------------------
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
+#include <cassert>
+#include <iomanip>
 
-#include "scanner.h"
+#include "data.h"
 using namespace std;
 
-int main(int argc, char *argv[])
+
+//------------------------------------------------------------------------------
+// CDataInitializer
+//
+CDataInitializer::CDataInitializer(void)
 {
-  int i = 1;
-
-  while (i < argc) {
-    CScanner *s = new CScanner(new ifstream(argv[i]));
-
-    cout << "scanning '" << argv[i] << "'..." << endl;
-
-    if (!s->Good()) cout << "  cannot open input stream: " << s->Peek() << endl;
-
-    while (s->Good()) {
-      CToken t = s->Get();
-      cout << "  " << t << endl;
-      if (t.GetType() == tEOF) break;
-    }
-
-    cout << endl << endl;
-
-    i++;
-  }
-
-  cout << "Done." << endl;
-
-  return EXIT_SUCCESS;
 }
+
+CDataInitializer::~CDataInitializer(void)
+{
+}
+
+
+//------------------------------------------------------------------------------
+// CDataInitString
+//
+CDataInitString::CDataInitString(const string data)
+  : CDataInitializer(), _data(data)
+{
+}
+
+string CDataInitString::GetData(void) const
+{
+  return _data;
+}
+
+ostream& CDataInitString::print(ostream &out, int indent) const
+{
+  string ind(indent, ' ');
+
+  out << ind << "[ data: '" << _data << "' ]";
+  return out;
+}
+

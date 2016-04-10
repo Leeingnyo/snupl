@@ -1,8 +1,9 @@
 //------------------------------------------------------------------------------
-/// @brief SNUPL scanner test
+/// @brief SNUPL parser test
 /// @author Bernhard Egger <bernhard@csap.snu.ac.kr>
 /// @section changelog Change Log
 /// 2012/09/14 Bernhard Egger created
+/// 2014/11/04 Bernhard Egger print dot command instead of running it
 ///
 /// @section license_section License
 /// Copyright (c) 2012-2016, Bernhard Egger
@@ -33,8 +34,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 
 #include "scanner.h"
+#include "parser.h"
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -43,15 +46,43 @@ int main(int argc, char *argv[])
 
   while (i < argc) {
     CScanner *s = new CScanner(new ifstream(argv[i]));
+    CParser *p = new CParser(s);
 
-    cout << "scanning '" << argv[i] << "'..." << endl;
+    cout << "parsing '" << argv[i] << "'..." << endl;
+    CAstNode *n = p->Parse();
 
-    if (!s->Good()) cout << "  cannot open input stream: " << s->Peek() << endl;
+    if (p->HasError()) {
+      const CToken *error = p->GetErrorToken();
+      cout << "parse error : at " << error->GetLineNumber() << ":"
+           << error->GetCharPosition() << " : "
+           << p->GetErrorMessage() << endl;
+    } else {
+      CAstModule *m = dynamic_cast<CAstModule*>(n);
+      assert(m != NULL);
 
-    while (s->Good()) {
-      CToken t = s->Get();
-      cout << "  " << t << endl;
-      if (t.GetType() == tEOF) break;
+      cout << "successfully parsed." << endl
+           << "  AST:" << endl;
+      m->print(cout, 4);
+      cout << endl << endl;
+
+      string outf = string(argv[i]) + ".ast.dot";
+      ofstream out(outf.c_str());
+      out << "digraph AST {" << endl
+          << "  graph [fontname=\"Times New Roman\",fontsize=10];" << endl
+          << "  node  [fontname=\"Courier New\",fontsize=10];" << endl
+          << "  edge  [fontname=\"Times New Roman\",fontsize=10];" << endl
+          << endl;
+      m->toDot(out, 2);
+      out << "}" << endl;
+      out.flush();
+
+      ostringstream cmd;
+      cmd << "dot -Tpdf -o" << argv[i] << ".ast.pdf " << argv[i] << ".ast.dot";
+      cout << "run the following command to convert the .dot file into a PDF:" << endl
+           << "  " << cmd.str() << 
+           endl;
+
+      delete m;
     }
 
     cout << endl << endl;

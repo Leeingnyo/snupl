@@ -4,8 +4,9 @@
 /// @section changelog Change Log
 /// 2012/09/14 Bernhard Egger created
 /// 2013/03/07 Bernhard Egger adapted to SnuPL/0
-/// 2014/09/10 Bernhard Egger assignment 1: scans SnuPL/-1
-/// 2016/03/13 Bernhard Egger assignment 1: adapted to modified SnuPL/-1 syntax
+/// 2016/03/11 Bernhard Egger adapted to SnuPL/1
+/// 2016/03/13 Bernhard Egger assignment 1: scans SnuPL/-1
+
 ///
 /// @section license_section License
 /// Copyright (c) 2012-2016, Bernhard Egger
@@ -33,8 +34,8 @@
 /// DAMAGE.
 //------------------------------------------------------------------------------
 
-#ifndef __SnuPL1_SCANNER_H__
-#define __SnuPL1_SCANNER_H__
+#ifndef __SnuPL_SCANNER_H__
+#define __SnuPL_SCANNER_H__
 
 #include <istream>
 #include <ostream>
@@ -163,6 +164,21 @@ class CToken {
 
     /// @}
 
+    /// @name string escape/unescaping (static methods)
+    /// @{
+
+    /// @brief escape special characters in a string
+    ///
+    /// @param text string
+    /// @retval escaped string
+    static string escape(const string text);
+
+    /// @brief unescape special characters in a string
+    ///
+    /// @param text escapted string
+    /// @retval unescaped string
+    static string unescape(const string text);
+    /// @}
 
     /// @brief print the token to an output stream
     ///
@@ -174,13 +190,6 @@ class CToken {
     string _value;                  ///< token value
     int    _line;                   ///< input stream position (line)
     int    _char;                   ///< input stream position (character pos)
-
-
-    /// @brief escape special characters in a string
-    ///
-    /// @param text string
-    /// @retval escaped string
-    string escape(const string text);
 };
 
 /// @name CToken output operators
@@ -262,7 +271,7 @@ class CScanner {
     void NextToken(void);
 
     /// @brief store the current position of the input stream internally
-    void RecordStreamPosition();
+    void RecordStreamPosition(void);
 
     /// @brief return the previously recorded input stream position
     ///
@@ -361,4 +370,4 @@ class CScanner {
 };
 
 
-#endif // __SnuPL0_SCANNER_H__
+#endif // __SnuPL_SCANNER_H__
