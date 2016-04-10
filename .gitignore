@@ -1,4 +1,5 @@
 obj/*.o
 test_scanner
+test_parser
 .DS_Store
 doc
