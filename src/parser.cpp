@@ -213,6 +213,10 @@ CAstExpression* CParser::expression(CAstScope* s)
 
     if (t.GetValue() == "=")       relop = opEqual;
     else if (t.GetValue() == "#")  relop = opNotEqual;
+    else if (t.GetValue() == "<")  relop = opLessThan;
+    else if (t.GetValue() == "<=")  relop = opLessEqual;
+    else if (t.GetValue() == ">")  relop = opBiggerThan;
+    else if (t.GetValue() == ">=")  relop = opBiggerEqual;
     else SetError(t, "invalid relation.");
 
     return new CAstBinaryOp(t, relop, left, right);
@@ -224,11 +228,20 @@ CAstExpression* CParser::expression(CAstScope* s)
 CAstExpression* CParser::simpleexpr(CAstScope *s)
 {
   //
-  // simpleexpr ::= term { termOp term }.
+  // simpleexpr ::= ["+" | "-"] term { termOp term }.
   //
   CAstExpression *n = NULL;
-
-  n = term(s);
+  if (_scanner->Peek().GetType() == tTermOp) {
+    if (_scanner->Peek().GetValue() == "||") {
+      SetError(_scanner->Peek(), "'+' or '-' expected");
+      return n;
+    }
+    CToken t;
+    Consume(tTermOp, &t);
+    n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, term(s) );
+  } else {
+    n = term(s);
+  }
 
   while (_scanner->Peek().GetType() == tTermOp) {
     CToken t;
@@ -248,7 +261,7 @@ CAstExpression* CParser::simpleexpr(CAstScope *s)
 CAstExpression* CParser::term(CAstScope *s)
 {
   //
-  // term ::= factor { ("*"|"/") factor }.
+  // term ::= factor { ("*"|"/"|"&&") factor }.
   //
   CAstExpression *n = NULL;
 
@@ -264,7 +277,7 @@ CAstExpression* CParser::term(CAstScope *s)
 
     r = factor(s);
 
-    n = new CAstBinaryOp(t, t.GetValue() == "*" ? opMul : opDiv, l, r);
+    n = new CAstBinaryOp(t, t.GetValue() == "*" ? opMul : t.GetValue() == "/" ? opDiv : opAnd , l, r);
 
     tt = _scanner->Peek().GetType();
   }
@@ -275,9 +288,8 @@ CAstExpression* CParser::term(CAstScope *s)
 CAstExpression* CParser::factor(CAstScope *s)
 {
   //
-  // factor ::= number | "(" expression ")"
-  //
-  // FIRST(factor) = { tNumber, tLBrak }
+  // factor ::= number | "(" expression ")" | number | boolean | character | string | "!" factor
+  // factor ::= qualident | subroutineCall
   //
 
   CToken t;
@@ -295,6 +307,39 @@ CAstExpression* CParser::factor(CAstScope *s)
       Consume(tLBrak);
       n = expression(s);
       Consume(tRBrak);
+      break;
+
+    // factor ::= boolean
+    case tBoolean:
+      n = boolean();
+      break;
+
+    // factor ::= char
+    case tChar:
+      n = character();
+      break;
+
+    // factor ::= string
+    case tString:
+      n = strConstant(s);
+      break;
+
+    // factor ::= "!" factor
+    case tCompl:
+      Consume(tCompl, &t);
+      n = new CAstUnaryOp(t, opNot, factor(s));
+      break;
+
+    // factor ::= qualident | subroutineCall
+    // qualident and subroutineCall starts with Identifier.
+    // Make lookahead to 2 for this case
+    case tId:
+      Consume(tId, &t);
+      if (_scanner->Peek().GetType() == tLBrak ) {
+        // TODO: n = subroutineCall(s, t);
+      } else {
+        // TODO: n = qualident(s, t);
+      }
       break;
 
     default:
