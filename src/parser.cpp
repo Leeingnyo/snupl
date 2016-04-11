@@ -471,7 +471,7 @@ CAstStatReturn* CParser::returnStatement(CAstScope *s)
   Consume(tReturn, &t);
 
   EToken tt = _scanner->Peek().GetType();
-  if (!(tt == tEnd || tt == tSemicolon)){
+  if (!(tt == tElse || tt == tEnd || tt == tSemicolon)){
     retval = expression(s);
   }
 
