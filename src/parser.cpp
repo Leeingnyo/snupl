@@ -140,9 +140,10 @@ CAstStatement* CParser::statSequence(CAstScope *s)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
-  // statement ::= assignment.
-  // FIRST(statSequence) = { tNumber }
-  // FOLLOW(statSequence) = { tDot }
+  // statement ::= assignment | subroutineCall
+  // statement ::= ifStatement | whileStatement | returnStatement
+  // FIRST(statSequence) = { tId, tIf, tWhile, tReturn }
+  // FOLLOW(statSequence) = { tElse, tEnd }
   //
   CAstStatement *head = NULL;
 
@@ -156,9 +157,27 @@ CAstStatement* CParser::statSequence(CAstScope *s)
       CAstStatement *st = NULL;
 
       switch (tt) {
-        // statement ::= assignment
-        case tNumber:
-          st = assignment(s);
+        // statement ::= assignment | subroutineCall
+        case tId:
+          Consume(tId, &t);
+          if (_scanner->Peek().GetType() == tLBrak ) {
+            // TODO: st = subroutineCall(s, t);
+          } else {
+            // TODO: st = assignment(s, t);
+            //       qualident를 만들고 assignment 고치기
+          }
+          break;
+        // statement ::= ifStatement
+        case tIf:
+          st = ifStatement(s);
+          break;
+        // statement ::= whileStatement
+        case tWhile:
+          st = whileStatement(s);
+          break;
+        // statement ::= returnStatement
+        case tReturn:
+          st = returnStatement(s);
           break;
 
         default:
@@ -172,7 +191,8 @@ CAstStatement* CParser::statSequence(CAstScope *s)
       tail = st;
 
       tt = _scanner->Peek().GetType();
-      if (tt == tDot) break;
+      if (tt == tEnd || tt == tElse || tt == tDot) break;
+      // FIXME: tDot 은 편의상 넣어둔 것, FOLLOW(statSequence)에 안 들어가니 지워야 함
 
       Consume(tSemicolon);
     } while (!_abort);
