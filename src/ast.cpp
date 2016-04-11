@@ -359,14 +359,14 @@ CTacAddr* CAstStatement::ToTac(CCodeBlock *cb, CTacLabel *next)
 // CAstStatAssign
 //
 CAstStatAssign::CAstStatAssign(CToken t,
-                               CAstConstant *lhs, CAstExpression *rhs)
+                               CAstDesignator *lhs, CAstExpression *rhs)
   : CAstStatement(t), _lhs(lhs), _rhs(rhs)
 {
   assert(lhs != NULL);
   assert(rhs != NULL);
 }
 
-CAstConstant* CAstStatAssign::GetLHS(void) const
+CAstDesignator* CAstStatAssign::GetLHS(void) const
 {
   return _lhs;
 }
@@ -639,7 +639,7 @@ void CAstStatIf::toDot(ostream &out, int indent) const
       string prev = dotID();
       do {
         s->toDot(out, indent);
-        out << ind << prev << " -> " << s->dotID() << " [style=dotted];" 
+        out << ind << prev << " -> " << s->dotID() << " [style=dotted];"
             << endl;
         prev = s->dotID();
         s = s->GetNext();

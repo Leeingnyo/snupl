@@ -222,11 +222,11 @@ CAstStatement* CParser::statSequence(CAstScope *s)
 CAstStatAssign* CParser::assignment(CAstScope *s)
 {
   //
-  // assignment ::= number ":=" expression.
+  // assignment ::= qualident ":=" expression.
   //
-  CToken t;
-
-  CAstConstant *lhs = number();
+  CToken t, idToken;
+  Consume(tId, &idToken);
+  CAstDesignator *lhs = qualident(s, idToken);
   Consume(tAssign, &t);
 
   CAstExpression *rhs = expression(s);
@@ -707,3 +707,31 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   Consume(tSemicolon);
   return n;
 }
+
+CAstDesignator* CParser::qualident(CAstScope *s, CToken idToken)
+{
+  //
+  // qualident ::= ident {"[" expression "]"}
+  //
+
+  const CSymbol *sb = s->GetSymbolTable()->FindSymbol(idToken.GetValue());
+  const CType *st = sb->GetDataType();
+  vector<CAstExpression*> ev;
+  while (_scanner->Peek().GetType() == tLBrak) {
+    Consume(tLBrak);
+    ev.push_back(expression(s));
+    Consume(tRBrak);
+  }
+  if (ev.size() == 0) {
+    return new CAstDesignator(idToken, sb);
+  }
+
+  CAstArrayDesignator* n = new CAstArrayDesignator(idToken, sb);
+
+  for (CAstExpression* it : ev) {
+    n->AddIndex(it);
+  }
+  n->IndicesComplete();
+  return n;
+}
+

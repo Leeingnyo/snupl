@@ -124,6 +124,7 @@ class CParser {
     vector<CVariable>  varDecl(CAstScope *s);
 
     CAstProcedure*    subroutineDecl(CAstScope *s);
+    CAstDesignator*   qualident(CAstScope *s, CToken idToken);
     /// @}
 
 
