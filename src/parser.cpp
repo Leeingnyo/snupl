@@ -363,7 +363,7 @@ CAstConstant* CParser::character(void)
   return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
 }
 
-CAstConstant* CParser::strConstant(CAstScope *s)
+CAstStringConstant* CParser::strConstant(CAstScope *s)
 {
   //
   // string ::= '"' { character } '"'
