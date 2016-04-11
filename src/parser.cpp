@@ -231,6 +231,39 @@ CAstStatAssign* CParser::assignment(CAstScope *s, CToken idToken)
   return new CAstStatAssign(t, lhs, rhs);
 }
 
+CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
+{
+  //
+  // subroutineCall ::= ident "(" [ expression {"," expression} ] ")"
+  //
+  CAstStatCall* n = NULL;
+
+  const CSymbol *tsb = s->GetSymbolTable()->FindSymbol(idToken.GetValue());
+  const CSymProc *sb = dynamic_cast<const CSymProc *>(tsb);
+  if (sb == NULL) {
+    SetError(idToken, "invalid symbol.");
+    return NULL;
+  }
+  CAstFunctionCall* fc = new CAstFunctionCall(idToken, sb);
+
+  Consume(tLBrak);
+
+  if(_scanner->Peek().GetType() == tRBrak) {
+    CAstExpression* arg = expression(s);
+    fc->AddArg(arg);
+    while(_scanner->Peek().GetType() == tComma) {
+      Consume(tComma);
+      CAstExpression* arg = expression(s);
+      fc->AddArg(arg);
+    }
+  }
+
+  Consume(tRBrak);
+
+  n = new CAstStatCall(idToken, fc);
+  return n;
+}
+
 CAstExpression* CParser::expression(CAstScope* s)
 {
   //
