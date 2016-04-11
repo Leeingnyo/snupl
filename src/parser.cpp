@@ -457,3 +457,23 @@ CAstStatIf* CParser::ifStatement(CAstScope *s)
 
   return new CAstStatIf(t, condition, ifBody, elseBody);
 }
+
+CAstStatReturn* CParser::returnStatement(CAstScope *s)
+{
+  //
+  // returnStatement ::= "return" [ expression ]
+  //
+
+  CToken t;
+
+  CAstExpression* retval = NULL;
+
+  Consume(tReturn, &t);
+
+  EToken tt = _scanner->Peek().GetType();
+  if (!(tt == tEnd || tt == tSemicolon)){
+    retval = expression(s);
+  }
+
+  return new CAstStatReturn(t, s, retval);
+}
