@@ -477,3 +477,24 @@ CAstStatReturn* CParser::returnStatement(CAstScope *s)
 
   return new CAstStatReturn(t, s, retval);
 }
+
+CAstStatWhile* CParser::whileStatement(CAstScope *s)
+{
+  //
+  // whileStatement ::= "while" "(" expression ")" "do" statSequence "end"
+  //
+
+  CToken t;
+
+  CAstExpression* condition = NULL;
+  CAstStatement* body = NULL;
+
+  Consume(tWhile, &t);
+  Consume(tLBrak);
+  condition = expression(s);
+  Consume(tRBrak);
+  Consume(tDo);
+  body = statSequence(s);
+
+  return new CAstStatWhile(t, condition, body);
+}
