@@ -463,7 +463,7 @@ CToken* CScanner::Scan()
             tokval += "\"";
           } else {
             tokval = unescapedStr;
-            token = tString;
+            token = tChar;
           }
         }
       } else {
