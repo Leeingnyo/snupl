@@ -112,6 +112,8 @@ class CParser {
 
     CAstStringConstant* strConstant(CAstScope *s);
 
+    CAstStatIf* ifStatement(CAstScope *s);
+
     /// @}
 
 

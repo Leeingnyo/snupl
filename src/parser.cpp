@@ -426,3 +426,34 @@ CAstStringConstant* CParser::strConstant(CAstScope *s)
 
   return new CAstStringConstant(t, v, s);
 }
+
+CAstStatIf* CParser::ifStatement(CAstScope *s)
+{
+  //
+  // ifStatement ::= "if" "(" expression ")" "then" stateSequence [ "else" stateSequence ] "end"
+  //
+
+  CToken t;
+
+  CAstExpression* condition = NULL;
+  CAstStatement* ifBody = NULL;
+  CAstStatement* elseBody = NULL;
+
+  EToken tt;
+
+  Consume(tIf, &t);
+  Consume(tLBrak);
+  condition = expression(s);
+  Consume(tRBrak);
+  Consume(tThen);
+  ifBody = statSequence(s);
+
+  tt = _scanner->Peek().GetType();
+  if (tt == tElse){
+    Consume(tElse);
+    elseBody = statSequence(s);
+  }
+  Consume(tEnd);
+
+  return new CAstStatIf(t, condition, ifBody, elseBody);
+}
