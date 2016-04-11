@@ -495,6 +495,7 @@ CAstStatWhile* CParser::whileStatement(CAstScope *s)
   Consume(tRBrak);
   Consume(tDo);
   body = statSequence(s);
+  Consume(tEnd);
 
   return new CAstStatWhile(t, condition, body);
 }
