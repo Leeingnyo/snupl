@@ -325,3 +325,40 @@ CAstConstant* CParser::number(void)
   return new CAstConstant(t, CTypeManager::Get()->GetInt(), v);
 }
 
+CAstConstant* CParser::boolean(void)
+{
+  //
+  // boolean ::= "true" | "false"
+  //
+  // "true" | "false" is scanned as one token (tBoolean)
+  //
+
+  CToken t;
+
+  Consume(tBoolean, &t);
+
+  errno = 0;
+  bool v = t.GetValue() == "true";
+  if (errno != 0) SetError(t, "invalid boolean.");
+
+  return new CAstConstant(t, CTypeManager::Get()->GetBool(), v);
+}
+
+CAstConstant* CParser::character(void)
+{
+  //
+  // char ::= "'" character "'"
+  //
+  // "'" character "'" is scanned as one token (tChar)
+  //
+
+  CToken t;
+
+  Consume(tChar, &t);
+
+  errno = 0;
+  char v = t.GetValue().c_str()[0];
+  if (errno != 0) SetError(t, "invalid character.");
+
+  return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
+}
