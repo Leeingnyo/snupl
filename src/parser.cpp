@@ -362,3 +362,22 @@ CAstConstant* CParser::character(void)
 
   return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
 }
+
+CAstConstant* CParser::strConstant(CAstScope *s)
+{
+  //
+  // string ::= '"' { character } '"'
+  //
+  // '"' { character } '"' is scanned as one token (tString)
+  //
+
+  CToken t;
+
+  Consume(tString, &t);
+
+  errno = 0;
+  string v = t.GetValue();
+  if (errno != 0) SetError(t, "invalid string.");
+
+  return new CAstStringConstant(t, v, s);
+}
