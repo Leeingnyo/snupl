@@ -433,9 +433,9 @@ const CType* CParser::type()
   Consume(tBaseType, &bt);
   const CType* n = NULL;
   if (bt.GetValue() == "char") n = CTypeManager::Get()->GetChar();
-  else if (bt.GetValue() == "boolen") n = CTypeManager::Get()->GetBool();
+  else if (bt.GetValue() == "boolean") n = CTypeManager::Get()->GetBool();
   else if (bt.GetValue() == "integer") n = CTypeManager::Get()->GetInt();
-  else SetError(t, "invalid base type");
+  else SetError(bt, "invalid base type");
   vector<long long> v;
   while(_scanner->Peek().GetType() == tLSBrak) {
     Consume(tLSBrak);
@@ -518,7 +518,8 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   vector<CVariable> paramVec;
   if (_scanner->Peek().GetType() == tLBrak) {
     Consume(tLBrak);
-    paramVec = varDeclSequence(s);
+    if (_scanner->Peek().GetType() != tRBrak)
+      paramVec = varDeclSequence(s);
     Consume(tRBrak);
   }
 
@@ -537,10 +538,14 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   for (int i=0; i<paramVec.size(); i++) {
     CVariable it = paramVec[i];
     symb->AddParam( new CSymParam(i, it.first, it.second) );
-    //TODO : add parameters to symbolTable?
   }
 
   n = new CAstProcedure(idToken, idToken.GetValue(), s, symb);
+
+  for (int i=0; i<paramVec.size(); i++) {
+    CVariable it = paramVec[i];
+    n->GetSymbolTable()->AddSymbol(new CSymParam(i, it.first, it.second));
+  }
 
   vector<CVariable> localVec = varDeclaration(s);
   for (CVariable it : localVec) {
