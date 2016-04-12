@@ -148,7 +148,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
   CAstStatement *head = NULL;
 
   EToken tt = _scanner->Peek().GetType();
-  if (!(tt == tDot)) {
+  if (!(tt == tEnd || tt == tElse)) {
     CAstStatement *tail = NULL;
 
     do {
@@ -191,8 +191,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
       tail = st;
 
       tt = _scanner->Peek().GetType();
-      if (tt == tEnd || tt == tElse || tt == tDot) break;
-      // FIXME: tDot 은 편의상 넣어둔 것, FOLLOW(statSequence)에 안 들어가니 지워야 함
+      if (tt != tSemicolon) break;
 
       Consume(tSemicolon);
     } while (!_abort);
