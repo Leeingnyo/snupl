@@ -124,14 +124,33 @@ CAstModule* CParser::module(void)
   //
   // module ::= statSequence  ".".
   //
-  CToken dummy;
-  CAstModule *m = new CAstModule(dummy, "placeholder");
-  CAstStatement *statseq = NULL;
+  CToken idToken;
+  Consume(tModule);
+  Consume(tId, &idToken);
+  Consume(tSemicolon);
 
-  statseq = statSequence(m);
-  Consume(tDot);
+  CAstModule *m = new CAstModule(idToken, idToken.GetValue());
 
+  vector<CVariable> vec = varDeclaration(m);
+  for (CVariable it : vec) {
+    CSymbol * sb = m->CreateVar(it.first, it.second);
+    m->GetSymbolTable()->AddSymbol(sb);
+  }
+  while(_scanner->Peek().GetType() != tBegin) {
+    CAstProcedure *proc = subroutineDecl(m);
+  }
+  Consume(tBegin);
+  CAstStatement *statseq = statSequence(m);
   m->SetStatementSequence(statseq);
+  Consume(tEnd);
+  CToken idToken2;
+  Consume(tId, &idToken2);
+
+  if (idToken.GetValue() != idToken2.GetValue()) {
+    SetError(idToken2, "invalid end identifier");
+  }
+
+  Consume(tDot);
 
   return m;
 }
