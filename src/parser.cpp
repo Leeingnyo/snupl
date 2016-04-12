@@ -122,7 +122,7 @@ void CParser::InitSymbolTable(CSymtab *s)
 CAstModule* CParser::module(void)
 {
   //
-  // module ::= statSequence  ".".
+  // module ::= "module" ident ";" varDeclaration { subroutineDecl } "begin" statSequence "end" ident "."
   //
   CToken idToken;
   Consume(tModule);
@@ -448,6 +448,11 @@ CAstStringConstant* CParser::strConstant(CAstScope *s)
 
 const CType* CParser::type()
 {
+  //
+  // type ::= basetype | type "[" [ number ] "]"
+  // this is left recursion -> left factoring
+  // type ::= basetype {"[" [number] "]"}
+  //
   CToken t, bt;
   Consume(tBaseType, &bt);
   const CType* n = NULL;
@@ -458,8 +463,13 @@ const CType* CParser::type()
   vector<long long> v;
   while(_scanner->Peek().GetType() == tLSBrak) {
     Consume(tLSBrak);
-    CAstConstant* c = number();
-    v.push_back(c->GetValue());
+    if (_scanner->Peek().GetType() == tNumber) {
+      CAstConstant* c = number();
+      v.push_back(c->GetValue());
+    } else {
+      v.push_back(CArrayType::OPEN);
+    }
+
     Consume(tRSBrak);
   }
   for (int i = v.size() - 1; i >= 0; i--) {
@@ -470,6 +480,9 @@ const CType* CParser::type()
 
 vector<CVariable> CParser::varDecl(CAstScope *s)
 {
+  //
+  // varDecl ::= ident { "," ident } ":" type
+  //
   CToken t;
   Consume(tId, &t);
   vector<string> v;
@@ -490,6 +503,9 @@ vector<CVariable> CParser::varDecl(CAstScope *s)
 
 vector<CVariable> CParser::varDeclSequence(CAstScope *s)
 {
+  //
+  // varDeclSequence ::= varDecl { ";" varDecl }
+  //
   vector<CVariable> ret;
   vector<CVariable> tmp = varDecl(s);
   ret.insert(ret.end(), tmp.begin(), tmp.end());
@@ -503,6 +519,11 @@ vector<CVariable> CParser::varDeclSequence(CAstScope *s)
 
 vector<CVariable> CParser::varDeclaration(CAstScope *s)
 {
+  //
+  // varDeclaration ::= [ "var" varDeclSequence ";" ]
+  // because this is ambiguous, express varDeclSequence with varDecl
+  // varDeclaration ::= [ "var" varDecl ";" { varDecl ";" } ]
+  //
   vector<CVariable> ret;
   if (_scanner->Peek().GetType() != tVar)
     return ret;
@@ -520,6 +541,16 @@ vector<CVariable> CParser::varDeclaration(CAstScope *s)
 
 CAstProcedure* CParser::subroutineDecl(CAstScope *s)
 {
+  //
+  // subroutineDecl ::= (procedureDecl | functionDecl) subroutineBody ident ";"
+  // procedureDecl ::= "procedure" ident [ formalParam ] ";"
+  // functionDecl ::= "function" ident [ formalParam ] ":" type ";"
+  // formalParam ::= "(" [ varDeclSequence ] ")"
+  // subroutineBody ::= varDeclaration "begin" statSequence "end"
+  //
+  // since variable other than subroutineDecl are used only in subroutineDecl,
+  // we decided not to make functions of those variables
+  //
   CToken idToken;
   CAstProcedure* n;
   bool isProc;
