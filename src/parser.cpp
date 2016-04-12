@@ -140,14 +140,15 @@ CAstStatement* CParser::statSequence(CAstScope *s)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
-  // statement ::= assignment.
-  // FIRST(statSequence) = { tNumber }
-  // FOLLOW(statSequence) = { tDot }
+  // statement ::= assignment | subroutineCall
+  // statement ::= ifStatement | whileStatement | returnStatement
+  // FIRST(statSequence) = { tId, tIf, tWhile, tReturn }
+  // FOLLOW(statSequence) = { tElse, tEnd }
   //
   CAstStatement *head = NULL;
 
   EToken tt = _scanner->Peek().GetType();
-  if (!(tt == tDot)) {
+  if (!(tt == tEnd || tt == tElse)) {
     CAstStatement *tail = NULL;
 
     do {
@@ -156,9 +157,27 @@ CAstStatement* CParser::statSequence(CAstScope *s)
       CAstStatement *st = NULL;
 
       switch (tt) {
-        // statement ::= assignment
-        case tNumber:
-          st = assignment(s);
+        // statement ::= assignment | subroutineCall
+        case tId:
+          Consume(tId, &t);
+          if (_scanner->Peek().GetType() == tLBrak ) {
+            // TODO: st = subroutineCall(s, t);
+          } else {
+            // TODO: st = assignment(s, t);
+            //       qualident를 만들고 assignment 고치기
+          }
+          break;
+        // statement ::= ifStatement
+        case tIf:
+          st = ifStatement(s);
+          break;
+        // statement ::= whileStatement
+        case tWhile:
+          st = whileStatement(s);
+          break;
+        // statement ::= returnStatement
+        case tReturn:
+          st = returnStatement(s);
           break;
 
         default:
@@ -172,7 +191,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
       tail = st;
 
       tt = _scanner->Peek().GetType();
-      if (tt == tDot) break;
+      if (tt != tSemicolon) break;
 
       Consume(tSemicolon);
     } while (!_abort);
@@ -425,4 +444,77 @@ CAstStringConstant* CParser::strConstant(CAstScope *s)
   if (errno != 0) SetError(t, "invalid string.");
 
   return new CAstStringConstant(t, v, s);
+}
+
+CAstStatIf* CParser::ifStatement(CAstScope *s)
+{
+  //
+  // ifStatement ::= "if" "(" expression ")" "then" stateSequence [ "else" stateSequence ] "end"
+  //
+
+  CToken t;
+
+  CAstExpression* condition = NULL;
+  CAstStatement* ifBody = NULL;
+  CAstStatement* elseBody = NULL;
+
+  EToken tt;
+
+  Consume(tIf, &t);
+  Consume(tLBrak);
+  condition = expression(s);
+  Consume(tRBrak);
+  Consume(tThen);
+  ifBody = statSequence(s);
+
+  tt = _scanner->Peek().GetType();
+  if (tt == tElse){
+    Consume(tElse);
+    elseBody = statSequence(s);
+  }
+  Consume(tEnd);
+
+  return new CAstStatIf(t, condition, ifBody, elseBody);
+}
+
+CAstStatReturn* CParser::returnStatement(CAstScope *s)
+{
+  //
+  // returnStatement ::= "return" [ expression ]
+  //
+
+  CToken t;
+
+  CAstExpression* retval = NULL;
+
+  Consume(tReturn, &t);
+
+  EToken tt = _scanner->Peek().GetType();
+  if (!(tt == tElse || tt == tEnd || tt == tSemicolon)){
+    retval = expression(s);
+  }
+
+  return new CAstStatReturn(t, s, retval);
+}
+
+CAstStatWhile* CParser::whileStatement(CAstScope *s)
+{
+  //
+  // whileStatement ::= "while" "(" expression ")" "do" statSequence "end"
+  //
+
+  CToken t;
+
+  CAstExpression* condition = NULL;
+  CAstStatement* body = NULL;
+
+  Consume(tWhile, &t);
+  Consume(tLBrak);
+  condition = expression(s);
+  Consume(tRBrak);
+  Consume(tDo);
+  body = statSequence(s);
+  Consume(tEnd);
+
+  return new CAstStatWhile(t, condition, body);
 }
