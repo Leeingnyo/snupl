@@ -248,7 +248,7 @@ CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
 
   Consume(tLBrak);
 
-  if(_scanner->Peek().GetType() == tRBrak) {
+  if(_scanner->Peek().GetType() != tRBrak) {
     CAstExpression* arg = expression(s);
     fc->AddArg(arg);
     while(_scanner->Peek().GetType() == tComma) {
