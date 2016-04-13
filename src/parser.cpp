@@ -180,7 +180,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
         case tId:
           Consume(tId, &t);
           if (_scanner->Peek().GetType() == tLBrak ) {
-            // TODO: st = subroutineCall(s, t);
+            st = subroutineCall(s, t);
           } else {
             st = assignment(s, t);
           }
@@ -404,7 +404,7 @@ CAstExpression* CParser::factor(CAstScope *s)
     case tId:
       Consume(tId, &t);
       if (_scanner->Peek().GetType() == tLBrak ) {
-        // TODO: n = subroutineCall(s, t);
+        n = subroutineCall(s, t)->GetCall();
       } else {
         n = qualident(s, t);
       }
