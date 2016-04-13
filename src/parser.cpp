@@ -138,6 +138,7 @@ CAstModule* CParser::module(void)
   }
   while(_scanner->Peek().GetType() != tBegin) {
     CAstProcedure *proc = subroutineDecl(m);
+    m->GetSymbolTable()->AddSymbol(proc->GetSymbol());
   }
   Consume(tBegin);
   CAstStatement *statseq = statSequence(m);
