@@ -138,6 +138,7 @@ CAstModule* CParser::module(void)
   }
   while(_scanner->Peek().GetType() != tBegin) {
     CAstProcedure *proc = subroutineDecl(m);
+    m->GetSymbolTable()->AddSymbol(proc->GetSymbol());
   }
   Consume(tBegin);
   CAstStatement *statseq = statSequence(m);
@@ -180,7 +181,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
         case tId:
           Consume(tId, &t);
           if (_scanner->Peek().GetType() == tLBrak ) {
-            // TODO: st = subroutineCall(s, t);
+            st = subroutineCall(s, t);
           } else {
             st = assignment(s, t);
           }
@@ -229,6 +230,39 @@ CAstStatAssign* CParser::assignment(CAstScope *s, CToken idToken)
 
   CAstExpression *rhs = expression(s);
   return new CAstStatAssign(t, lhs, rhs);
+}
+
+CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
+{
+  //
+  // subroutineCall ::= ident "(" [ expression {"," expression} ] ")"
+  //
+  CAstStatCall* n = NULL;
+
+  const CSymbol *tsb = s->GetSymbolTable()->FindSymbol(idToken.GetValue());
+  const CSymProc *sb = dynamic_cast<const CSymProc *>(tsb);
+  if (sb == NULL) {
+    SetError(idToken, "invalid symbol.");
+    return NULL;
+  }
+  CAstFunctionCall* fc = new CAstFunctionCall(idToken, sb);
+
+  Consume(tLBrak);
+
+  if(_scanner->Peek().GetType() != tRBrak) {
+    CAstExpression* arg = expression(s);
+    fc->AddArg(arg);
+    while(_scanner->Peek().GetType() == tComma) {
+      Consume(tComma);
+      CAstExpression* arg = expression(s);
+      fc->AddArg(arg);
+    }
+  }
+
+  Consume(tRBrak);
+
+  n = new CAstStatCall(idToken, fc);
+  return n;
 }
 
 CAstExpression* CParser::expression(CAstScope* s)
@@ -371,7 +405,7 @@ CAstExpression* CParser::factor(CAstScope *s)
     case tId:
       Consume(tId, &t);
       if (_scanner->Peek().GetType() == tLBrak ) {
-        // TODO: n = subroutineCall(s, t);
+        n = subroutineCall(s, t)->GetCall();
       } else {
         n = qualident(s, t);
       }
