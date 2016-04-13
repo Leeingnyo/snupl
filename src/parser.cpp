@@ -182,8 +182,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
           if (_scanner->Peek().GetType() == tLBrak ) {
             // TODO: st = subroutineCall(s, t);
           } else {
-            // TODO: st = assignment(s, t);
-            //       qualident를 만들고 assignment 고치기
+            st = assignment(s, t);
           }
           break;
         // statement ::= ifStatement
@@ -219,18 +218,16 @@ CAstStatement* CParser::statSequence(CAstScope *s)
   return head;
 }
 
-CAstStatAssign* CParser::assignment(CAstScope *s)
+CAstStatAssign* CParser::assignment(CAstScope *s, CToken idToken)
 {
   //
   // assignment ::= qualident ":=" expression.
   //
-  CToken t, idToken;
-  Consume(tId, &idToken);
+  CToken t;
   CAstDesignator *lhs = qualident(s, idToken);
   Consume(tAssign, &t);
 
   CAstExpression *rhs = expression(s);
-
   return new CAstStatAssign(t, lhs, rhs);
 }
 
@@ -376,7 +373,7 @@ CAstExpression* CParser::factor(CAstScope *s)
       if (_scanner->Peek().GetType() == tLBrak ) {
         // TODO: n = subroutineCall(s, t);
       } else {
-        // TODO: n = qualident(s, t);
+        n = qualident(s, t);
       }
       break;
 

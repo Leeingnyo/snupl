@@ -100,7 +100,7 @@ class CParser {
 
     CAstStatement*    statSequence(CAstScope *s);
 
-    CAstStatAssign*   assignment(CAstScope *s);
+    CAstStatAssign*   assignment(CAstScope *s, CToken idToken);
 
     CAstExpression*   expression(CAstScope *s);
     CAstExpression*   simpleexpr(CAstScope *s);
