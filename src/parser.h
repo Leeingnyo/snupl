@@ -103,7 +103,6 @@ class CParser {
     CAstStatAssign*   assignment(CAstScope *s, CToken idToken);
     CAstStatCall*     subroutineCall(CAstScope *s, CToken idToken);
 
-
     CAstExpression*   expression(CAstScope *s);
     CAstExpression*   simpleexpr(CAstScope *s);
     CAstExpression*   term(CAstScope *s);
