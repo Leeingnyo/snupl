@@ -100,7 +100,7 @@ class CParser {
 
     CAstStatement*    statSequence(CAstScope *s);
 
-    CAstStatAssign*   assignment(CAstScope *s);
+    CAstStatAssign*   assignment(CAstScope *s, CToken idToken);
 
     CAstExpression*   expression(CAstScope *s);
     CAstExpression*   simpleexpr(CAstScope *s);
@@ -124,6 +124,7 @@ class CParser {
     vector<CVariable>  varDecl(CAstScope *s);
 
     CAstProcedure*    subroutineDecl(CAstScope *s);
+    CAstDesignator*   qualident(CAstScope *s, CToken idToken);
     /// @}
 
 

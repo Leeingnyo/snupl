@@ -182,8 +182,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
           if (_scanner->Peek().GetType() == tLBrak ) {
             // TODO: st = subroutineCall(s, t);
           } else {
-            // TODO: st = assignment(s, t);
-            //       qualident를 만들고 assignment 고치기
+            st = assignment(s, t);
           }
           break;
         // statement ::= ifStatement
@@ -219,18 +218,16 @@ CAstStatement* CParser::statSequence(CAstScope *s)
   return head;
 }
 
-CAstStatAssign* CParser::assignment(CAstScope *s)
+CAstStatAssign* CParser::assignment(CAstScope *s, CToken idToken)
 {
   //
-  // assignment ::= number ":=" expression.
+  // assignment ::= qualident ":=" expression.
   //
   CToken t;
-
-  CAstConstant *lhs = number();
+  CAstDesignator *lhs = qualident(s, idToken);
   Consume(tAssign, &t);
 
   CAstExpression *rhs = expression(s);
-
   return new CAstStatAssign(t, lhs, rhs);
 }
 
@@ -376,7 +373,7 @@ CAstExpression* CParser::factor(CAstScope *s)
       if (_scanner->Peek().GetType() == tLBrak ) {
         // TODO: n = subroutineCall(s, t);
       } else {
-        // TODO: n = qualident(s, t);
+        n = qualident(s, t);
       }
       break;
 
@@ -707,3 +704,31 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   Consume(tSemicolon);
   return n;
 }
+
+CAstDesignator* CParser::qualident(CAstScope *s, CToken idToken)
+{
+  //
+  // qualident ::= ident {"[" expression "]"}
+  //
+
+  const CSymbol *sb = s->GetSymbolTable()->FindSymbol(idToken.GetValue());
+  if (sb == NULL) SetError(idToken, "undefined identifier");
+  const CType *st = sb->GetDataType();
+  vector<CAstExpression*> ev;
+  while (_scanner->Peek().GetType() == tLSBrak) {
+    Consume(tLSBrak);
+    ev.push_back(expression(s));
+    Consume(tRSBrak);
+  }
+  if (ev.size() == 0) {
+    return new CAstDesignator(idToken, sb);
+  }
+
+  CAstArrayDesignator* n = new CAstArrayDesignator(idToken, sb);
+  for (CAstExpression* it : ev) {
+    n->AddIndex(it);
+  }
+  n->IndicesComplete();
+  return n;
+}
+
