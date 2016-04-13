@@ -712,19 +712,19 @@ CAstDesignator* CParser::qualident(CAstScope *s, CToken idToken)
   //
 
   const CSymbol *sb = s->GetSymbolTable()->FindSymbol(idToken.GetValue());
+  if (sb == NULL) SetError(idToken, "undefined identifier");
   const CType *st = sb->GetDataType();
   vector<CAstExpression*> ev;
-  while (_scanner->Peek().GetType() == tLBrak) {
-    Consume(tLBrak);
+  while (_scanner->Peek().GetType() == tLSBrak) {
+    Consume(tLSBrak);
     ev.push_back(expression(s));
-    Consume(tRBrak);
+    Consume(tRSBrak);
   }
   if (ev.size() == 0) {
     return new CAstDesignator(idToken, sb);
   }
 
   CAstArrayDesignator* n = new CAstArrayDesignator(idToken, sb);
-
   for (CAstExpression* it : ev) {
     n->AddIndex(it);
   }
