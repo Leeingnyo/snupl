@@ -122,16 +122,35 @@ void CParser::InitSymbolTable(CSymtab *s)
 CAstModule* CParser::module(void)
 {
   //
-  // module ::= statSequence  ".".
+  // module ::= "module" ident ";" varDeclaration { subroutineDecl } "begin" statSequence "end" ident "."
   //
-  CToken dummy;
-  CAstModule *m = new CAstModule(dummy, "placeholder");
-  CAstStatement *statseq = NULL;
+  CToken idToken;
+  Consume(tModule);
+  Consume(tId, &idToken);
+  Consume(tSemicolon);
 
-  statseq = statSequence(m);
-  Consume(tDot);
+  CAstModule *m = new CAstModule(idToken, idToken.GetValue());
 
+  vector<CVariable> vec = varDeclaration(m);
+  for (CVariable it : vec) {
+    CSymbol * sb = m->CreateVar(it.first, it.second);
+    m->GetSymbolTable()->AddSymbol(sb);
+  }
+  while(_scanner->Peek().GetType() != tBegin) {
+    CAstProcedure *proc = subroutineDecl(m);
+  }
+  Consume(tBegin);
+  CAstStatement *statseq = statSequence(m);
   m->SetStatementSequence(statseq);
+  Consume(tEnd);
+  CToken idToken2;
+  Consume(tId, &idToken2);
+
+  if (idToken.GetValue() != idToken2.GetValue()) {
+    SetError(idToken2, "invalid end identifier");
+  }
+
+  Consume(tDot);
 
   return m;
 }
@@ -517,4 +536,174 @@ CAstStatWhile* CParser::whileStatement(CAstScope *s)
   Consume(tEnd);
 
   return new CAstStatWhile(t, condition, body);
+}
+
+const CType* CParser::type()
+{
+  //
+  // type ::= basetype | type "[" [ number ] "]"
+  // this is left recursion -> left factoring
+  // type ::= basetype {"[" [number] "]"}
+  //
+  CToken t, bt;
+  Consume(tBaseType, &bt);
+  const CType* n = NULL;
+  if (bt.GetValue() == "char") n = CTypeManager::Get()->GetChar();
+  else if (bt.GetValue() == "boolean") n = CTypeManager::Get()->GetBool();
+  else if (bt.GetValue() == "integer") n = CTypeManager::Get()->GetInt();
+  else SetError(bt, "invalid base type");
+  vector<long long> v;
+  while(_scanner->Peek().GetType() == tLSBrak) {
+    Consume(tLSBrak);
+    if (_scanner->Peek().GetType() == tNumber) {
+      CAstConstant* c = number();
+      v.push_back(c->GetValue());
+    } else {
+      v.push_back(CArrayType::OPEN);
+    }
+
+    Consume(tRSBrak);
+  }
+  for (int i = v.size() - 1; i >= 0; i--) {
+    n = new CArrayType( (int) v[i], n);
+  }
+  return n;
+}
+
+vector<CVariable> CParser::varDecl(CAstScope *s)
+{
+  //
+  // varDecl ::= ident { "," ident } ":" type
+  //
+  CToken t;
+  Consume(tId, &t);
+  vector<string> v;
+  v.push_back(t.GetValue());
+  while(_scanner->Peek().GetType() == tComma) {
+    Consume(tComma);
+    Consume(tId, &t);
+    v.push_back(t.GetValue());
+  }
+  Consume(tColon);
+  const CType* ct = type();
+  vector<CVariable> ret;
+  for (string it : v) {
+    ret.push_back(make_pair(it,ct));
+  }
+  return ret;
+}
+
+vector<CVariable> CParser::varDeclSequence(CAstScope *s)
+{
+  //
+  // varDeclSequence ::= varDecl { ";" varDecl }
+  //
+  vector<CVariable> ret;
+  vector<CVariable> tmp = varDecl(s);
+  ret.insert(ret.end(), tmp.begin(), tmp.end());
+  while (_scanner->Peek().GetType() == tSemicolon) {
+    Consume(tSemicolon);
+    tmp = varDecl(s);
+    ret.insert(ret.end(), tmp.begin(), tmp.end());
+  }
+  return ret;
+}
+
+vector<CVariable> CParser::varDeclaration(CAstScope *s)
+{
+  //
+  // varDeclaration ::= [ "var" varDeclSequence ";" ]
+  // because this is ambiguous, express varDeclSequence with varDecl
+  // varDeclaration ::= [ "var" varDecl ";" { varDecl ";" } ]
+  //
+  vector<CVariable> ret;
+  if (_scanner->Peek().GetType() != tVar)
+    return ret;
+  Consume(tVar);
+  vector<CVariable> tmp = varDecl(s);
+  ret.insert(ret.end(), tmp.begin(), tmp.end());
+  Consume(tSemicolon);
+  while (_scanner->Peek().GetType() == tId) {
+    tmp = varDecl(s);
+    ret.insert(ret.end(), tmp.begin(), tmp.end());
+    Consume(tSemicolon);
+  }
+  return ret;
+}
+
+CAstProcedure* CParser::subroutineDecl(CAstScope *s)
+{
+  //
+  // subroutineDecl ::= (procedureDecl | functionDecl) subroutineBody ident ";"
+  // procedureDecl ::= "procedure" ident [ formalParam ] ";"
+  // functionDecl ::= "function" ident [ formalParam ] ":" type ";"
+  // formalParam ::= "(" [ varDeclSequence ] ")"
+  // subroutineBody ::= varDeclaration "begin" statSequence "end"
+  //
+  // since variable other than subroutineDecl are used only in subroutineDecl,
+  // we decided not to make functions of those variables
+  //
+  CToken idToken;
+  CAstProcedure* n;
+  bool isProc;
+  if (_scanner->Peek().GetType() == tProcedure) {
+    Consume(tProcedure);
+    isProc = true;
+  } else if (_scanner->Peek().GetType() == tFunction) {
+    Consume(tFunction);
+    isProc = false;
+  } else {
+    SetError(_scanner->Peek(), "expected \"procedure\" or \"function\"");
+  }
+
+  Consume (tId, &idToken);
+  vector<CVariable> paramVec;
+  if (_scanner->Peek().GetType() == tLBrak) {
+    Consume(tLBrak);
+    if (_scanner->Peek().GetType() != tRBrak)
+      paramVec = varDeclSequence(s);
+    Consume(tRBrak);
+  }
+
+  CSymProc* symb;
+
+  if(isProc) {
+    Consume(tSemicolon);
+    symb = new CSymProc(idToken.GetValue(), CTypeManager::Get()->GetNull());
+  } else {
+    Consume(tColon);
+    const CType* t = type();
+    Consume(tSemicolon);
+    symb = new CSymProc(idToken.GetValue(), t);
+  }
+
+  for (int i=0; i<paramVec.size(); i++) {
+    CVariable it = paramVec[i];
+    symb->AddParam( new CSymParam(i, it.first, it.second) );
+  }
+
+  n = new CAstProcedure(idToken, idToken.GetValue(), s, symb);
+
+  for (int i=0; i<paramVec.size(); i++) {
+    CVariable it = paramVec[i];
+    n->GetSymbolTable()->AddSymbol(new CSymParam(i, it.first, it.second));
+  }
+
+  vector<CVariable> localVec = varDeclaration(n);
+  for (CVariable it : localVec) {
+    CSymbol * sb = n->CreateVar(it.first, it.second);
+    n->GetSymbolTable()->AddSymbol(sb);
+  }
+  Consume(tBegin);
+  CAstStatement* body = statSequence(n);
+  n->SetStatementSequence(body);
+  Consume(tEnd);
+
+  CToken idToken2;
+  Consume(tId, &idToken2);
+  if (idToken.GetValue() != idToken2.GetValue()) {
+    SetError(idToken2, "invalid end identifier");
+  }
+  Consume(tSemicolon);
+  return n;
 }

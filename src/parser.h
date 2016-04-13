@@ -40,6 +40,7 @@
 #include "symtab.h"
 #include "ast.h"
 
+typedef pair<string, const CType*> CVariable;
 
 //------------------------------------------------------------------------------
 /// @brief parser
@@ -116,6 +117,13 @@ class CParser {
     CAstStatReturn* returnStatement(CAstScope *s);
     CAstStatWhile* whileStatement(CAstScope *s);
 
+    const CType*      type();
+
+    vector<CVariable>  varDeclaration(CAstScope *s);
+    vector<CVariable>  varDeclSequence(CAstScope *s);
+    vector<CVariable>  varDecl(CAstScope *s);
+
+    CAstProcedure*    subroutineDecl(CAstScope *s);
     /// @}
 
 
