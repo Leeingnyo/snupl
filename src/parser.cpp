@@ -116,7 +116,32 @@ void CParser::InitSymbolTable(CSymtab *s)
 {
   CTypeManager *tm = CTypeManager::Get();
 
-  // TODO: add predefined functions here
+  CSymProc* t = new CSymProc("DIM", tm->GetInt());
+  t->AddParam(new CSymParam(0, "arg0", tm->GetPointer(tm->GetNull())));
+  t->AddParam(new CSymParam(1, "arg1", tm->GetInt()));
+  s->AddSymbol(t);
+
+  t = new CSymProc("DOFS", tm->GetInt());
+  t->AddParam(new CSymParam(0, "arg", tm->GetPointer(tm->GetNull())));
+  s->AddSymbol(t);
+
+  t = new CSymProc("ReadInt", tm->GetInt());
+  s->AddSymbol(t);
+
+  t = new CSymProc("WriteChar", tm->GetNull());
+  t->AddParam(new CSymParam(0, "arg", tm->GetChar()));
+  s->AddSymbol(t);
+
+  t = new CSymProc("WriteInt", tm->GetNull());
+  t->AddParam(new CSymParam(0, "arg", tm->GetInt()));
+  s->AddSymbol(t);
+
+  t = new CSymProc("WriteLn", tm->GetNull());
+  s->AddSymbol(t);
+
+  t = new CSymProc("WriteStr", tm->GetNull());
+  t->AddParam(new CSymParam(0, "arg", tm->GetPointer(tm->GetArray(CArrayType::OPEN, tm->GetChar()))));
+  s->AddSymbol(t);
 }
 
 CAstModule* CParser::module(void)
@@ -130,6 +155,7 @@ CAstModule* CParser::module(void)
   Consume(tSemicolon);
 
   CAstModule *m = new CAstModule(idToken, idToken.GetValue());
+  InitSymbolTable(m->GetSymbolTable());
 
   vector<CVariable> vec = varDeclaration(m);
   for (CVariable it : vec) {
