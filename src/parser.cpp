@@ -597,7 +597,7 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
     n->GetSymbolTable()->AddSymbol(new CSymParam(i, it.first, it.second));
   }
 
-  vector<CVariable> localVec = varDeclaration(s);
+  vector<CVariable> localVec = varDeclaration(n);
   for (CVariable it : localVec) {
     CSymbol * sb = n->CreateVar(it.first, it.second);
     n->GetSymbolTable()->AddSymbol(sb);
