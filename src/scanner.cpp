@@ -539,7 +539,7 @@ EToken CScanner::TokenForIdentifier(string s) const
   else if (s == "begin") return tBegin;
   else if (s == "end") return tEnd;
   else if (s == "true" || s == "false") return tBoolean;
-  else if (s == "character" || s == "boolean" || s == "integer") return tBaseType;
+  else if (s == "char" || s == "boolean" || s == "integer") return tBaseType;
   else if (s == "if") return tIf;
   else if (s == "then") return tThen;
   else if (s == "else") return tElse;
