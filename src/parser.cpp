@@ -501,7 +501,7 @@ CAstConstant* CParser::character(void)
   Consume(tChar, &t);
 
   errno = 0;
-  char v = t.GetValue().c_str()[0];
+  char v = CToken::unescape(t.GetValue()).c_str()[0];
   if (errno != 0) SetError(t, "invalid character.");
 
   return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
