@@ -350,7 +350,7 @@ CAstExpression* CParser::simpleexpr(CAstScope *s)
 
     r = term(s);
 
-    n = new CAstBinaryOp(t, t.GetValue() == "+" ? opAdd : opSub, l, r);
+    n = new CAstBinaryOp(t, t.GetValue() == "+" ? opAdd : t.GetValue() == "-" ? opSub : opOr, l, r);
   }
 
 
