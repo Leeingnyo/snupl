@@ -125,10 +125,6 @@ void CParser::InitSymbolTable(CSymtab *s)
   t->AddParam(new CSymParam(0, "arg", tm->GetPointer(tm->GetNull())));
   s->AddSymbol(t);
 
-  t = new CSymProc("PrintInt", tm->GetNull());
-  t->AddParam(new CSymParam(0, "arg", tm->GetInt()));
-  s->AddSymbol(t);
-
   t = new CSymProc("ReadInt", tm->GetInt());
   s->AddSymbol(t);
 
