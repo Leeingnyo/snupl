@@ -125,10 +125,6 @@ void CParser::InitSymbolTable(CSymtab *s)
   t->AddParam(new CSymParam(0, "arg", tm->GetPointer(tm->GetNull())));
   s->AddSymbol(t);
 
-  t = new CSymProc("PrintInt", tm->GetNull());
-  t->AddParam(new CSymParam(0, "arg", tm->GetInt()));
-  s->AddSymbol(t);
-
   t = new CSymProc("ReadInt", tm->GetInt());
   s->AddSymbol(t);
 
@@ -168,7 +164,6 @@ CAstModule* CParser::module(void)
   }
   while(_scanner->Peek().GetType() != tBegin) {
     CAstProcedure *proc = subroutineDecl(m);
-    m->GetSymbolTable()->AddSymbol(proc->GetSymbol());
   }
   Consume(tBegin);
   CAstStatement *statseq = statSequence(m);
@@ -755,6 +750,9 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
     CSymbol * sb = n->CreateVar(it.first, it.second);
     n->GetSymbolTable()->AddSymbol(sb);
   }
+
+  s->GetSymbolTable()->AddSymbol(n->GetSymbol());
+
   Consume(tBegin);
   CAstStatement* body = statSequence(n);
   n->SetStatementSequence(body);
