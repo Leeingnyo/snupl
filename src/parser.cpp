@@ -157,14 +157,12 @@ CAstModule* CParser::module(void)
   CAstModule *m = new CAstModule(idToken, idToken.GetValue());
   InitSymbolTable(m->GetSymbolTable());
 
-  vector<CVariable> vec = varDeclaration(m);
-  for (CVariable it : vec) {
-    CSymbol * sb = m->CreateVar(it.first, it.second);
-    m->GetSymbolTable()->AddSymbol(sb);
-  }
+  varDeclaration(m);
+
   while(_scanner->Peek().GetType() != tBegin) {
     CAstProcedure *proc = subroutineDecl(m);
   }
+
   Consume(tBegin);
   CAstStatement *statseq = statSequence(m);
   m->SetStatementSequence(statseq);
@@ -626,65 +624,75 @@ const CType* CParser::type()
   return n;
 }
 
-vector<CVariable> CParser::varDecl(CAstScope *s)
+void CParser::varDecl(CAstScope *s, bool asParam)
 {
   //
   // varDecl ::= ident { "," ident } ":" type
   //
   CToken t;
   Consume(tId, &t);
-  vector<string> v;
-  v.push_back(t.GetValue());
+  vector<CToken> v;
+  v.push_back(t);
   while(_scanner->Peek().GetType() == tComma) {
     Consume(tComma);
     Consume(tId, &t);
-    v.push_back(t.GetValue());
+    v.push_back(t);
   }
   Consume(tColon);
   const CType* ct = type();
-  vector<CVariable> ret;
-  for (string it : v) {
-    ret.push_back(make_pair(it,ct));
+  for (CToken it : v) {
+    if (asParam) {
+      CAstProcedure* proc = dynamic_cast<CAstProcedure*>(s);
+      assert(s != NULL);
+      CSymProc* procSymb = proc->GetSymbol();
+      int paramIndex = procSymb->GetNParams();
+      if (!(s->GetSymbolTable()->AddSymbol(new CSymParam(paramIndex, it.GetValue(), ct)))) {
+        SetError(it, "Duplicated identifier in parameter");
+      }
+      procSymb->AddParam(new CSymParam(paramIndex, it.GetValue(), ct));
+
+    } else {
+      CSymbol * sb = s->CreateVar(it.GetValue(), ct);
+      if(!(s->GetSymbolTable()->AddSymbol(sb))) {
+        SetError(it, "Duplicated variable declaration");
+      }
+    }
   }
-  return ret;
 }
 
-vector<CVariable> CParser::varDeclSequence(CAstScope *s)
+void CParser::varDeclSequence(CAstScope *s)
 {
   //
   // varDeclSequence ::= varDecl { ";" varDecl }
+  // varDeclSequence is used for function parameters
+  // so, asParam is true
   //
-  vector<CVariable> ret;
-  vector<CVariable> tmp = varDecl(s);
-  ret.insert(ret.end(), tmp.begin(), tmp.end());
+  varDecl(s, true);
   while (_scanner->Peek().GetType() == tSemicolon) {
     Consume(tSemicolon);
-    tmp = varDecl(s);
-    ret.insert(ret.end(), tmp.begin(), tmp.end());
+    varDecl(s, true);
   }
-  return ret;
 }
 
-vector<CVariable> CParser::varDeclaration(CAstScope *s)
+void CParser::varDeclaration(CAstScope *s)
 {
   //
   // varDeclaration ::= [ "var" varDeclSequence ";" ]
   // because this is ambiguous, express varDeclSequence with varDecl
   // varDeclaration ::= [ "var" varDecl ";" { varDecl ";" } ]
+  // varDeclaration is used for variables
+  // so, asParam is false
   //
-  vector<CVariable> ret;
+
   if (_scanner->Peek().GetType() != tVar)
-    return ret;
+    return;
   Consume(tVar);
-  vector<CVariable> tmp = varDecl(s);
-  ret.insert(ret.end(), tmp.begin(), tmp.end());
+  varDecl(s, false);
   Consume(tSemicolon);
   while (_scanner->Peek().GetType() == tId) {
-    tmp = varDecl(s);
-    ret.insert(ret.end(), tmp.begin(), tmp.end());
+    varDecl(s, false);
     Consume(tSemicolon);
   }
-  return ret;
 }
 
 CAstProcedure* CParser::subroutineDecl(CAstScope *s)
@@ -711,47 +719,30 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   } else {
     SetError(_scanner->Peek(), "expected \"procedure\" or \"function\"");
   }
-
   Consume (tId, &idToken);
-  vector<CVariable> paramVec;
+
+  CSymProc* symb = new CSymProc(idToken.GetValue(), CTypeManager::Get()->GetNull());;
+  n = new CAstProcedure(idToken, idToken.GetValue(), s, symb);
+
   if (_scanner->Peek().GetType() == tLBrak) {
     Consume(tLBrak);
     if (_scanner->Peek().GetType() != tRBrak)
-      paramVec = varDeclSequence(s);
+      varDeclSequence(n);
     Consume(tRBrak);
   }
 
-  CSymProc* symb;
-
   if(isProc) {
     Consume(tSemicolon);
-    symb = new CSymProc(idToken.GetValue(), CTypeManager::Get()->GetNull());
   } else {
     Consume(tColon);
     const CType* t = type();
     Consume(tSemicolon);
-    symb = new CSymProc(idToken.GetValue(), t);
-  }
-
-  for (int i=0; i<paramVec.size(); i++) {
-    CVariable it = paramVec[i];
-    symb->AddParam( new CSymParam(i, it.first, it.second) );
-  }
-
-  n = new CAstProcedure(idToken, idToken.GetValue(), s, symb);
-
-  for (int i=0; i<paramVec.size(); i++) {
-    CVariable it = paramVec[i];
-    n->GetSymbolTable()->AddSymbol(new CSymParam(i, it.first, it.second));
-  }
-
-  vector<CVariable> localVec = varDeclaration(n);
-  for (CVariable it : localVec) {
-    CSymbol * sb = n->CreateVar(it.first, it.second);
-    n->GetSymbolTable()->AddSymbol(sb);
+    n->GetSymbol()->SetReturnType(t);
   }
 
   s->GetSymbolTable()->AddSymbol(n->GetSymbol());
+
+  varDeclaration(n);
 
   Consume(tBegin);
   CAstStatement* body = statSequence(n);

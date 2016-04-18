@@ -120,9 +120,9 @@ class CParser {
 
     const CType*      type();
 
-    vector<CVariable>  varDeclaration(CAstScope *s);
-    vector<CVariable>  varDeclSequence(CAstScope *s);
-    vector<CVariable>  varDecl(CAstScope *s);
+    void  varDeclaration(CAstScope *s);
+    void  varDeclSequence(CAstScope *s);
+    void  varDecl(CAstScope *s, bool asParam);
 
     CAstProcedure*    subroutineDecl(CAstScope *s);
     CAstDesignator*   qualident(CAstScope *s, CToken idToken);
