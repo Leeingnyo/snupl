@@ -743,7 +743,9 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
     n->GetSymbol()->SetReturnType(t);
   }
 
-  s->GetSymbolTable()->AddSymbol(n->GetSymbol());
+  if(!(s->GetSymbolTable()->AddSymbol(n->GetSymbol()))) {
+    SetError(idToken, "Duplicated subroutine name");
+  }
 
   varDeclaration(n);
 
