@@ -305,6 +305,10 @@ class CSymProc : public CSymbol {
     /// @name property handling
     /// @{
 
+    /// @brief Set return type
+    /// @param return_type return type
+    void SetReturnType(const CType *return_type);
+
     /// @brief add a parameter
     /// @param param parameter
     void AddParam(CSymParam *param);

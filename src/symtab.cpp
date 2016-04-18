@@ -219,6 +219,11 @@ CSymProc::CSymProc(const string name, const CType *return_type)
 {
 }
 
+void CSymProc::SetReturnType(const CType *return_type)
+{
+  SetDataType(return_type);
+}
+
 void CSymProc::AddParam(CSymParam *param)
 {
   _param.push_back(param);
