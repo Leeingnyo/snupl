@@ -721,7 +721,7 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   }
   Consume (tId, &idToken);
 
-  CSymProc* symb = new CSymProc(idToken.GetValue(), CTypeManager::Get()->GetNull());;
+  CSymProc* symb = new CSymProc(idToken.GetValue(), CTypeManager::Get()->GetNull());
   n = new CAstProcedure(idToken, idToken.GetValue(), s, symb);
 
   if (_scanner->Peek().GetType() == tLBrak) {
