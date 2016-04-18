@@ -803,7 +803,24 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
 
 const CType* CAstBinaryOp::GetType(void) const
 {
-  return CTypeManager::Get()->GetInt();
+  switch (GetOperation()) {
+  case opAdd:
+  case opMul:
+  case opSub:
+  case opDiv:
+    return CTypeManager::Get()->GetInt();
+  case opAnd:
+  case opOr:
+  case opEqual:
+  case opNotEqual:
+  case opLessThan:
+  case opLessEqual:
+  case opBiggerThan:
+  case opBiggerEqual:
+    return CTypeManager::Get()->GetBool();
+  default:
+    return NULL;
+  }
 }
 
 ostream& CAstBinaryOp::print(ostream &out, int indent) const
@@ -876,7 +893,15 @@ bool CAstUnaryOp::TypeCheck(CToken *t, string *msg) const
 
 const CType* CAstUnaryOp::GetType(void) const
 {
-  return CTypeManager::Get()->GetInt();
+  switch (GetOperation()) {
+    case opNeg:
+    case opPos:
+      return CTypeManager::Get()->GetInt();
+    case opNot:
+      return CTypeManager::Get()->GetBool();
+    default:
+      return NULL;
+  }
 }
 
 ostream& CAstUnaryOp::print(ostream &out, int indent) const
@@ -948,7 +973,20 @@ bool CAstSpecialOp::TypeCheck(CToken *t, string *msg) const
 
 const CType* CAstSpecialOp::GetType(void) const
 {
-  return NULL;
+  CTypeManager* tm = CTypeManager::Get();
+  switch (GetOperation()) {
+  case opAddress:
+    return tm->GetPointer(_operand->GetType());
+  case opDeref:
+    const CPointerType* pt;
+    pt = dynamic_cast<const CPointerType*>(_operand->GetType());
+    if (pt == NULL) return NULL;
+    return pt->GetBaseType();
+  case opCast:
+    return _type;
+  default:
+    return NULL;
+  }
 }
 
 ostream& CAstSpecialOp::print(ostream &out, int indent) const
@@ -1193,7 +1231,14 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg) const
 
 const CType* CAstArrayDesignator::GetType(void) const
 {
-  return NULL;
+  const CType* ret = _symbol->GetDataType();
+  for (int i = 0; i < _idx.size(); i++) {
+    if (!ret->IsArray()) return NULL;
+    const CArrayType* arrType = dynamic_cast<const CArrayType*>(ret);
+    assert(arrType);
+    ret = arrType->GetInnerType();
+  }
+  return ret;
 }
 
 ostream& CAstArrayDesignator::print(ostream &out, int indent) const
@@ -1359,7 +1404,7 @@ bool CAstStringConstant::TypeCheck(CToken *t, string *msg) const
 
 const CType* CAstStringConstant::GetType(void) const
 {
-  return NULL;
+  return _type;
 }
 
 ostream& CAstStringConstant::print(ostream &out, int indent) const
