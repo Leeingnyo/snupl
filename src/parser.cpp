@@ -642,6 +642,9 @@ void CParser::varDecl(CAstScope *s, bool asParam)
   const CType* ct = type();
   for (CToken it : v) {
     if (asParam) {
+      if (ct->IsArray()) {
+        ct = CTypeManager::Get()->GetPointer(ct);
+      }
       CAstProcedure* proc = dynamic_cast<CAstProcedure*>(s);
       assert(s != NULL);
       CSymProc* procSymb = proc->GetSymbol();
