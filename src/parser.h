@@ -40,8 +40,6 @@
 #include "symtab.h"
 #include "ast.h"
 
-typedef pair<string, const CType*> CVariable;
-
 //------------------------------------------------------------------------------
 /// @brief parser
 ///
