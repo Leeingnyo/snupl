@@ -273,11 +273,11 @@ CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
   Consume(tLBrak);
 
   if(_scanner->Peek().GetType() != tRBrak) {
-    CAstExpression* arg = expression(s);
+    CAstExpression* arg = parameter(s);
     fc->AddArg(arg);
     while(_scanner->Peek().GetType() == tComma) {
       Consume(tComma);
-      CAstExpression* arg = expression(s);
+      arg = parameter(s);
       fc->AddArg(arg);
     }
   }
@@ -286,6 +286,19 @@ CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
 
   n = new CAstStatCall(idToken, fc);
   return n;
+}
+
+CAstExpression* CParser::parameter(CAstScope* s)
+{
+  CAstExpression* arg = expression(s);
+  CAstDesignator* dsn = dynamic_cast<CAstDesignator*>(arg);
+  if (dsn != NULL) {
+    if(dsn->GetSymbol()->GetDataType()->IsArray()) {
+      CToken defaultToken;
+      return new CAstSpecialOp(defaultToken, opAddress, arg);
+    }
+  }
+  return arg;
 }
 
 CAstExpression* CParser::expression(CAstScope* s)
