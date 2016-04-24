@@ -293,7 +293,7 @@ CAstExpression* CParser::parameter(CAstScope* s)
   CAstExpression* arg = expression(s);
   CAstDesignator* dsn = dynamic_cast<CAstDesignator*>(arg);
   if (dsn != NULL) {
-    if(dsn->GetSymbol()->GetDataType()->IsArray()) {
+    if(dsn->GetType()->IsArray()) {
       CToken defaultToken;
       return new CAstSpecialOp(defaultToken, opAddress, arg);
     }
