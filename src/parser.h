@@ -111,7 +111,7 @@ class CParser {
     CAstConstant*     boolean(void);
     CAstConstant*     character(void);
 
-    CAstStringConstant* strConstant(CAstScope *s);
+    CAstSpecialOp* strConstant(CAstScope *s);
 
     CAstStatIf* ifStatement(CAstScope *s);
     CAstStatReturn* returnStatement(CAstScope *s);

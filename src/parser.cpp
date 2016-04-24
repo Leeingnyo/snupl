@@ -513,14 +513,13 @@ CAstConstant* CParser::character(void)
   return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
 }
 
-CAstStringConstant* CParser::strConstant(CAstScope *s)
+CAstSpecialOp* CParser::strConstant(CAstScope *s)
 {
   //
   // string ::= '"' { character } '"'
   //
   // '"' { character } '"' is scanned as one token (tString)
   //
-
   CToken t;
 
   Consume(tString, &t);
@@ -528,8 +527,8 @@ CAstStringConstant* CParser::strConstant(CAstScope *s)
   errno = 0;
   string v = t.GetValue();
   if (errno != 0) SetError(t, "invalid string.");
-
-  return new CAstStringConstant(t, v, s);
+  CAstStringConstant* stringConstant = new CAstStringConstant(t, v, s);
+  return new CAstSpecialOp(t, opAddress, stringConstant);
 }
 
 CAstStatIf* CParser::ifStatement(CAstScope *s)
