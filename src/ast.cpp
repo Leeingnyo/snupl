@@ -981,9 +981,9 @@ const CType* CAstSpecialOp::GetType(void) const
     const CPointerType* pt;
     pt = dynamic_cast<const CPointerType*>(_operand->GetType());
     if (pt == NULL) return NULL;
-    return pt->GetBaseType();
+    return pt->GetBaseType(); // dereferencing makes type to the basetype
   case opCast:
-    return _type;
+    return _type; // change the type to specific type
   default:
     return NULL;
   }
@@ -1233,10 +1233,10 @@ const CType* CAstArrayDesignator::GetType(void) const
 {
   const CType* ret = _symbol->GetDataType();
   for (int i = 0; i < _idx.size(); i++) {
-    if (!ret->IsArray()) return NULL;
+    if (!ret->IsArray()) return NULL; // if it access the non array, type is INVALID
     const CArrayType* arrType = dynamic_cast<const CArrayType*>(ret);
     assert(arrType);
-    ret = arrType->GetInnerType();
+    ret = arrType->GetInnerType(); // get the inner type for index count
   }
   return ret;
 }
