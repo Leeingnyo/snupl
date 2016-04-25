@@ -116,6 +116,7 @@ void CParser::InitSymbolTable(CSymtab *s)
 {
   CTypeManager *tm = CTypeManager::Get();
 
+  //Add symbols for predefined functions and procedures
   CSymProc* t = new CSymProc("DIM", tm->GetInt());
   t->AddParam(new CSymParam(0, "arg0", tm->GetPointer(tm->GetNull())));
   t->AddParam(new CSymParam(1, "arg1", tm->GetInt()));
@@ -159,7 +160,7 @@ CAstModule* CParser::module(void)
 
   varDeclaration(m);
 
-  while(_scanner->Peek().GetType() != tBegin) {
+  while(_scanner->Peek().GetType() != tBegin) { // FIRST(subroutineDecl) does not have tBegin
     CAstProcedure *proc = subroutineDecl(m);
   }
 
@@ -170,6 +171,7 @@ CAstModule* CParser::module(void)
   CToken idToken2;
   Consume(tId, &idToken2);
 
+  // check for matching identifier
   if (idToken.GetValue() != idToken2.GetValue()) {
     SetError(idToken2, "invalid end identifier");
   }
@@ -191,7 +193,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
   CAstStatement *head = NULL;
 
   EToken tt = _scanner->Peek().GetType();
-  if (!(tt == tEnd || tt == tElse)) {
+  if (!(tt == tEnd || tt == tElse)) { // FOLLOW(statSequence)
     CAstStatement *tail = NULL;
 
     do {
@@ -203,10 +205,10 @@ CAstStatement* CParser::statSequence(CAstScope *s)
         // statement ::= assignment | subroutineCall
         case tId:
           Consume(tId, &t);
-          if (_scanner->Peek().GetType() == tLBrak ) {
+          if (_scanner->Peek().GetType() == tLBrak ) { //subroutineCall starts with tId, tLBrak
             st = subroutineCall(s, t);
           } else {
-            st = assignment(s, t);
+            st = assignment(s, t); // assignment does not starts with tId, tLBrak
           }
           break;
         // statement ::= ifStatement
@@ -264,7 +266,7 @@ CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
 
   const CSymbol *tsb = s->GetSymbolTable()->FindSymbol(idToken.GetValue());
   const CSymProc *sb = dynamic_cast<const CSymProc *>(tsb);
-  if (sb == NULL) {
+  if (sb == NULL) { // symbol must be procedure type
     SetError(idToken, "invalid symbol.");
     return NULL;
   }
@@ -272,7 +274,7 @@ CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
 
   Consume(tLBrak);
 
-  if(_scanner->Peek().GetType() != tRBrak) {
+  if(_scanner->Peek().GetType() != tRBrak) { // there can be no parameters
     CAstExpression* arg = parameter(s);
     fc->AddArg(arg);
     while(_scanner->Peek().GetType() == tComma) {
@@ -290,10 +292,14 @@ CAstStatCall* CParser::subroutineCall(CAstScope *s, CToken idToken)
 
 CAstExpression* CParser::parameter(CAstScope* s)
 {
+  //
+  // this function is for subroutineCall's parameter
+  // though parameter is same as expression, we need to put opAddress for array parameter
+  //
   CAstExpression* arg = expression(s);
   CAstDesignator* dsn = dynamic_cast<CAstDesignator*>(arg);
   if (dsn != NULL) {
-    if(dsn->GetType()->IsArray()) {
+    if(dsn->GetType()->IsArray()) { // if expression's type is array, wrap it with opAddress
       CToken defaultToken;
       return new CAstSpecialOp(defaultToken, opAddress, arg);
     }
@@ -322,7 +328,7 @@ CAstExpression* CParser::expression(CAstScope* s)
     else if (t.GetValue() == "<=")  relop = opLessEqual;
     else if (t.GetValue() == ">")  relop = opBiggerThan;
     else if (t.GetValue() == ">=")  relop = opBiggerEqual;
-    else SetError(t, "invalid relation.");
+    else SetError(t, "invalid relation."); // Normally, this should not happen
 
     return new CAstBinaryOp(t, relop, left, right);
   } else {
@@ -336,14 +342,14 @@ CAstExpression* CParser::simpleexpr(CAstScope *s)
   // simpleexpr ::= ["+" | "-"] term { termOp term }.
   //
   CAstExpression *n = NULL;
-  if (_scanner->Peek().GetType() == tTermOp) {
-    if (_scanner->Peek().GetValue() == "||") {
+  if (_scanner->Peek().GetType() == tTermOp) { // FIRST(term) does not have tTermOp
+    if (_scanner->Peek().GetValue() == "||") { // FIRST(term) does not have "||" operator
       SetError(_scanner->Peek(), "'+' or '-' expected");
       return n;
     }
     CToken t;
     Consume(tTermOp, &t);
-    n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, term(s) );
+    n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, term(s) ); // wrap the term with unary operator
   } else {
     n = term(s);
   }
@@ -374,7 +380,7 @@ CAstExpression* CParser::term(CAstScope *s)
 
   EToken tt = _scanner->Peek().GetType();
 
-  while ((tt == tFactOp)) {
+  while (tt == tFactOp) {
     CToken t;
     CAstExpression *l = n, *r;
 
@@ -507,7 +513,7 @@ CAstConstant* CParser::character(void)
   Consume(tChar, &t);
 
   errno = 0;
-  char v = CToken::unescape(t.GetValue()).c_str()[0];
+  char v = CToken::unescape(t.GetValue()).c_str()[0]; // need to unescape before taking first character
   if (errno != 0) SetError(t, "invalid character.");
 
   return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
@@ -519,6 +525,7 @@ CAstSpecialOp* CParser::strConstant(CAstScope *s)
   // string ::= '"' { character } '"'
   //
   // '"' { character } '"' is scanned as one token (tString)
+  // strConstant's value should actually be the pointer of array of char
   //
   CToken t;
 
@@ -528,7 +535,7 @@ CAstSpecialOp* CParser::strConstant(CAstScope *s)
   string v = t.GetValue();
   if (errno != 0) SetError(t, "invalid string.");
   CAstStringConstant* stringConstant = new CAstStringConstant(t, v, s);
-  return new CAstSpecialOp(t, opAddress, stringConstant);
+  return new CAstSpecialOp(t, opAddress, stringConstant); // wrap string by opAddress
 }
 
 CAstStatIf* CParser::ifStatement(CAstScope *s)
@@ -575,7 +582,7 @@ CAstStatReturn* CParser::returnStatement(CAstScope *s)
   Consume(tReturn, &t);
 
   EToken tt = _scanner->Peek().GetType();
-  if (!(tt == tElse || tt == tEnd || tt == tSemicolon)){
+  if (!(tt == tElse || tt == tEnd || tt == tSemicolon)) { // FOLLOW(returnStatement) = {tElse, tEnd, tSemicolon}
     retval = expression(s);
   }
 
@@ -617,21 +624,21 @@ const CType* CParser::type()
   if (bt.GetValue() == "char") n = CTypeManager::Get()->GetChar();
   else if (bt.GetValue() == "boolean") n = CTypeManager::Get()->GetBool();
   else if (bt.GetValue() == "integer") n = CTypeManager::Get()->GetInt();
-  else SetError(bt, "invalid base type");
+  else SetError(bt, "invalid base type"); // Normally, this should not happen
   vector<long long> v;
-  while(_scanner->Peek().GetType() == tLSBrak) {
+  while(_scanner->Peek().GetType() == tLSBrak) { // tLSBrak is only used in this case
     Consume(tLSBrak);
     if (_scanner->Peek().GetType() == tNumber) {
       CAstConstant* c = number();
       v.push_back(c->GetValue());
     } else {
-      v.push_back(CArrayType::OPEN);
+      v.push_back(CArrayType::OPEN); // if there is no number between square brackets, it is OPEN Dimension
     }
 
     Consume(tRSBrak);
   }
   for (int i = v.size() - 1; i >= 0; i--) {
-    n = new CArrayType( (int) v[i], n);
+    n = new CArrayType( (int) v[i], n); // make array type as linked list
   }
   return n;
 }
@@ -653,23 +660,23 @@ void CParser::varDecl(CAstScope *s, bool asParam)
   Consume(tColon);
   const CType* ct = type();
   for (CToken it : v) {
-    if (asParam) {
+    if (asParam) { // if varDecl is used for declaration of parameter
       if (ct->IsArray()) {
-        ct = CTypeManager::Get()->GetPointer(ct);
+        ct = CTypeManager::Get()->GetPointer(ct); // make array as pointer type
       }
       CAstProcedure* proc = dynamic_cast<CAstProcedure*>(s);
-      assert(s != NULL);
+      assert(s != NULL); // declaration of parameter must be done on procedure scope
       CSymProc* procSymb = proc->GetSymbol();
       int paramIndex = procSymb->GetNParams();
-      if (!(s->GetSymbolTable()->AddSymbol(new CSymParam(paramIndex, it.GetValue(), ct)))) {
-        SetError(it, "Duplicated identifier in parameter");
+      if (!(s->GetSymbolTable()->AddSymbol(new CSymParam(paramIndex, it.GetValue(), ct)))) { // add symbol as CSymParam
+        SetError(it, "Duplicated identifier in parameter"); // if AddSymbol fails, it means duplicated identifier
       }
       procSymb->AddParam(new CSymParam(paramIndex, it.GetValue(), ct));
 
-    } else {
-      CSymbol * sb = s->CreateVar(it.GetValue(), ct);
+    } else { // if varDecl is not used for declaration of parameter
+      CSymbol * sb = s->CreateVar(it.GetValue(), ct); // just create variable and add symbol
       if(!(s->GetSymbolTable()->AddSymbol(sb))) {
-        SetError(it, "Duplicated variable declaration");
+        SetError(it, "Duplicated variable declaration"); // if AddSymbol fails, it means duplicated identifier
       }
     }
   }
@@ -680,6 +687,7 @@ void CParser::varDeclSequence(CAstScope *s)
   //
   // varDeclSequence ::= varDecl { ";" varDecl }
   // varDeclSequence is used for function parameters
+  // (because, we changed varDeclaration to not use varDeclSequence)
   // so, asParam is true
   //
   varDecl(s, true);
@@ -736,7 +744,7 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   }
   Consume (tId, &idToken);
 
-  CSymProc* symb = new CSymProc(idToken.GetValue(), CTypeManager::Get()->GetNull());
+  CSymProc* symb = new CSymProc(idToken.GetValue(), CTypeManager::Get()->GetNull()); // first, we set type of procedure as NULL
   n = new CAstProcedure(idToken, idToken.GetValue(), s, symb);
 
   if (_scanner->Peek().GetType() == tLBrak) {
@@ -747,12 +755,12 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   }
 
   if(isProc) {
-    Consume(tSemicolon);
+    Consume(tSemicolon); // don't need to change the return type for Procedure
   } else {
     Consume(tColon);
     const CType* t = type();
     Consume(tSemicolon);
-    n->GetSymbol()->SetReturnType(t);
+    n->GetSymbol()->SetReturnType(t); // we set return type here
   }
 
   if(!(s->GetSymbolTable()->AddSymbol(n->GetSymbol()))) {
@@ -790,7 +798,7 @@ CAstDesignator* CParser::qualident(CAstScope *s, CToken idToken)
     ev.push_back(expression(s));
     Consume(tRSBrak);
   }
-  if (ev.size() == 0) {
+  if (ev.size() == 0) { // if there is no "[" and "]", return as AstDesignator
     return new CAstDesignator(idToken, sb);
   }
 
