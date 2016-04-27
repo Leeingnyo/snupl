@@ -94,36 +94,114 @@ class CParser {
     /// @name methods for recursive-descent parsing
     /// @{
 
+    /// @brief make module ast node
+    /// @retval CAstModule module ast
     CAstModule*       module(void);
 
+    /// @brief make statement sequence ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstStatement statement ast
     CAstStatement*    statSequence(CAstScope *s);
 
+    /// @brief make assignment ast node
+    /// @param CAstScope scope which ast node exists
+    /// @param token identifier token for assignment start
+    /// @retval CAstStatAssign assignment ast
     CAstStatAssign*   assignment(CAstScope *s, CToken idToken);
+
+    /// @brief make subroutine call ast node
+    /// @param CAstScope scope which ast node exists
+    /// @param token identifier token for subroutine call start
+    /// @retval CAstStatCall subroutine call ast
     CAstStatCall*     subroutineCall(CAstScope *s, CToken idToken);
+
+    /// @brief make parameter ast node with address operator on the array parameter
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstExpression parameter ast
     CAstExpression*   parameter(CAstScope* s);
 
+    /// @brief make expression ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstExpression expression ast
     CAstExpression*   expression(CAstScope *s);
+
+    /// @brief make simple expression ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstExpression simple expression ast
     CAstExpression*   simpleexpr(CAstScope *s);
+
+    /// @brief make term ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstExpression term ast
     CAstExpression*   term(CAstScope *s);
+
+    /// @brief make factor ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstExpression factor ast
     CAstExpression*   factor(CAstScope *s);
 
+    /// @brief convert number token to CAstConstant
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstConstant number ast
     CAstConstant*     number(void);
+
+    /// @brief convert boolean token to CAstConstant
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstConstant boolean ast
     CAstConstant*     boolean(void);
+
+    /// @brief convert character token to CAstConstant
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstConstant character ast
     CAstConstant*     character(void);
 
+    /// @brief convert string token to address of CAstStringConstant
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstSpecialOp opAddress on CAstStringConstant
     CAstSpecialOp* strConstant(CAstScope *s);
 
+    /// @brief make if statement ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstStatIf if statement ast
     CAstStatIf* ifStatement(CAstScope *s);
+
+    /// @brief make return statement ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstStatReturn return statement ast
     CAstStatReturn* returnStatement(CAstScope *s);
+
+    /// @brief make while statement ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstStatWhile while statement ast
     CAstStatWhile* whileStatement(CAstScope *s);
 
+    /// @brief make type from tokens
+    /// @param CAstScope scope which ast node exists
+    /// @retval CType type
     const CType*      type();
 
+    /// @brief add variables to the scope
+    /// @param CAstScope scope to add variables
     void  varDeclaration(CAstScope *s);
+
+    /// @brief add parameter to the procedure scope
+    /// @param CAstScope scope to add parameters
     void  varDeclSequence(CAstScope *s);
+
+    /// @brief add variables/parameters to the scope
+    /// @param CAstScope scope to add variables
+    /// @param asParam choose whether to add variables or parameters
     void  varDecl(CAstScope *s, bool asParam);
 
+    /// @brief make subroutine Declaration ast node
+    /// @param CAstScope scope which ast node exists
+    /// @retval CAstProcedure subroutine Declaration ast
     CAstProcedure*    subroutineDecl(CAstScope *s);
+
+    /// @brief make qualident ast node
+    /// @param CAstScope scope which ast node exists
+    /// @param token identifier token for qualident start
+    /// @retval CAstDesignator qualident ast
     CAstDesignator*   qualident(CAstScope *s, CToken idToken);
     /// @}
 
