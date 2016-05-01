@@ -103,11 +103,23 @@ class CType {
     /// @name type comparisons
     /// @{
 
-    /// @brief compare two types
+    /// @brief match two types
+    ///
+    /// Match() and Compare() differ as follows: Match() returns true for
+    /// compatible types whereas Compare() only returns true for identical
+    /// types. Except for array and pointer types, Match() and Compare()
+    /// return the same result.
+    ///
     /// @param t type to compare this type to
     /// @retval true if the types match (are compatible)
     /// @retval false if the types do not match (are not compatible)
     virtual bool Match(const CType *t) const = 0;
+
+    /// @brief compare two types. Returns true if the types are identical
+    /// @param t type to compare this type to
+    /// @retval true if the types are identical
+    /// @retval false if the types are not identical
+    virtual bool Compare(const CType *t) const;
 
     /// @}
 
@@ -124,14 +136,14 @@ class CType {
 /// @brief CType output operator
 ///
 /// @param out output stream
-/// @param d reference to CType
+/// @param t reference to CType
 /// @retval output stream
 ostream& operator<<(ostream &out, const CType &t);
 
 /// @brief CType output operator
 ///
 /// @param out output stream
-/// @param d reference to CType
+/// @param t reference to CType
 /// @retval output stream
 ostream& operator<<(ostream &out, const CType *t);
 
@@ -439,15 +451,23 @@ class CArrayType : public CType {
     ///
     /// CArrayType::Match() matches this type with type @t. The matching is
     /// performed recursively on each dimension down to the base type.
-    /// On each dimension, the number of elements must match or @t's dimension
-    /// be CArrayType::OPEN (but not vice-versa, i.e., when type matching array
-    /// function arguments with function parameters, the argument must call
-    /// Match() with the formal parameter as its argument.
+    /// On each dimension, the number of elements must match o one of the arrays
+    /// must have dimension of CArrayType::OPEN
     ///
     /// @param t type to compare this type to
     /// @retval true if the types match (are compatible)
     /// @retval false if the types do not match (are not compatible)
     virtual bool Match(const CType *t) const;
+
+    /// @brief compare two array types
+    ///
+    /// CArrayType::Compare() is identical to Match() but does not support
+    /// open arrays.
+    ///
+    /// @param t type to compare this type to
+    /// @retval true if the types are equal
+    /// @retval false if the types are not equal
+    virtual bool Compare(const CType *t) const;
 
     /// @}
 

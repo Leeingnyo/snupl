@@ -4,7 +4,6 @@
 /// @section changelog Change Log
 /// 2012/09/14 Bernhard Egger created
 /// 2016/03/12 Bernhard Egger adapted to SnuPL/1
-/// 2016/04/08 Bernhard Egger assignment 2: removed type checking code
 ///
 /// @section license_section License
 /// Copyright (c) 2012-2016, Bernhard Egger
@@ -54,6 +53,11 @@ int CType::GetDataSize(void) const
   return GetSize();
 }
 
+bool CType::Compare(const CType *t) const
+{
+  return Match(t);
+}
+
 ostream& operator<<(ostream &out, const CType &t)
 {
   return t.print(out);
@@ -70,7 +74,9 @@ ostream& operator<<(ostream &out, const CType *t)
 //
 bool CScalarType::Match(const CType *t) const
 {
-  return false;
+  // types are singletons and not implicit type conversions are allowed, 
+  // i.e., for scalar types we can simply compare the pointers
+  return (t == this);
 }
 
 
@@ -157,7 +163,22 @@ CPointerType::CPointerType(const CType *basetype)
 
 bool CPointerType::Match(const CType *t) const
 {
-  return false;
+  if ((t == NULL) || !t->IsPointer()) return false;
+
+  const CPointerType *pt = dynamic_cast<const CPointerType*>(t);
+  assert(pt != NULL);
+
+  // void pointers are compatible with any other pointer. If none of the
+  // pointers is a void pointer, compare the base types.
+  /*
+  bool b = GetBaseType()->IsNull() || pt->GetBaseType()->IsNull() ||
+           GetBaseType()->Match(pt->GetBaseType());
+  cout << "CPointerType::Match: "
+       << GetBaseType() << "  <-->  " << pt->GetBaseType() << "  =  " << b
+       << endl;
+  */
+  return GetBaseType()->IsNull() || pt->GetBaseType()->IsNull() ||
+         GetBaseType()->Match(pt->GetBaseType());
 }
 
 ostream& CPointerType::print(ostream &out, int indent) const
@@ -222,7 +243,28 @@ int CArrayType::GetNDim(void) const
 
 bool CArrayType::Match(const CType *t) const
 {
-  return false;
+  if (t->IsArray()) {
+    const CArrayType *at = dynamic_cast<const CArrayType*>(t);
+    assert(at != NULL);
+    return ((GetNElem() == at->GetNElem()) ||
+            (GetNElem() == OPEN) ||
+            (at->GetNElem() == OPEN)) &&
+           (GetInnerType()->Match(at->GetInnerType()));
+  } else {
+    return false;
+  }
+}
+
+bool CArrayType::Compare(const CType *t) const
+{
+  if (t->IsArray()) {
+    const CArrayType *at = dynamic_cast<const CArrayType*>(t);
+    assert(at != NULL);
+    return ((GetNElem() == at->GetNElem()) &&
+            GetInnerType()->Compare(at->GetInnerType()));
+  } else {
+    return false;
+  }
 }
 
 ostream& CArrayType::print(ostream &out, int indent) const
@@ -315,7 +357,7 @@ const CArrayType* CTypeManager::GetArray(int nelem, const CType *innertype)
 {
   for (size_t i=0; i<_array.size(); i++) {
     if ((_array[i]->GetNElem() == nelem) &&
-        (_array[i]->GetInnerType()->Match(innertype))) {
+        (_array[i]->GetInnerType()->Compare(innertype))) {
       return _array[i];
     }
   }

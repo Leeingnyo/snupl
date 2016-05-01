@@ -48,6 +48,16 @@ CDataInitializer::~CDataInitializer(void)
 {
 }
 
+ostream& operator<<(ostream &out, const CDataInitializer &t)
+{
+  return t.print(out);
+}
+
+ostream& operator<<(ostream &out, const CDataInitializer *t)
+{
+  return t->print(out);
+}
+
 
 //------------------------------------------------------------------------------
 // CDataInitString
