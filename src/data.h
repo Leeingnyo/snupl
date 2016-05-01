@@ -72,16 +72,16 @@ class CDataInitializer {
 /// @brief CDataInitializer output operator
 ///
 /// @param out output stream
-/// @param di reference to CDataInitializer
+/// @param t reference to CDataInitializer
 /// @retval output stream
-ostream& operator<<(ostream &out, const CDataInitializer &di);
+ostream& operator<<(ostream &out, const CDataInitializer &t);
 
 /// @brief CDataInitializer output operator
 ///
 /// @param out output stream
-/// @param di reference to CDataInitializer
+/// @param t reference to CDataInitializer
 /// @retval output stream
-ostream& operator<<(ostream &out, const CDataInitializer *di);
+ostream& operator<<(ostream &out, const CDataInitializer *t);
 
 /// @}
 
