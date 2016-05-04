@@ -1323,6 +1323,30 @@ string CAstConstant::GetValueStr(void) const
 
 bool CAstConstant::TypeCheck(CToken *t, string *msg) const
 {
+  CTypeManager* tm = CTypeManager::Get();
+  if (_type->Match(tm->GetInt())) {
+    if (_value < -2147483648 || _value > 2147483647) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "invalid value for integer type constant";
+      return false;
+    }
+  } else if (_type->Match(tm->GetChar())) {
+    if (_value < 0 || _value > 255) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "invalid value for character type constant";
+      return false;
+    }
+  } else if (_type->Match(tm->GetBool())) {
+    if (_value != 0 || _value != 1) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "invalid value for boolean type constant";
+      return false;
+    }
+  } else {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "invalid type for constant";
+    return false;
+  }
   return true;
 }
 
