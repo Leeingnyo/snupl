@@ -798,7 +798,66 @@ CAstExpression* CAstBinaryOp::GetRight(void) const
 
 bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
 {
-  return true;
+  bool ret = _left->TypeCheck(t,msg) && _right->TypeCheck(t,msg);
+  CTypeManager* tm = CTypeManager::Get();
+  if (!ret) return false;
+  const CType* leftType = _left->GetType(), *rightType = _right->GetType();
+  switch (GetOperation()) {
+  case opAdd:
+  case opMul:
+  case opSub:
+  case opDiv:
+    if (!(leftType->Match(tm->GetInt()))) {
+      if (t == NULL) *t = _left->GetToken();
+      if (msg == NULL) *msg = "expected integer type expression in left operand";
+      return false;
+    } else if (!(rightType->Match(tm->GetInt()))) {
+      if (t == NULL) *t = _right->GetToken();
+      if (msg == NULL) *msg = "expected integer type expression in right operand";
+      return false;
+    }
+    return true;
+  case opAnd:
+  case opOr:
+    if (!(leftType->Match(tm->GetBool()))) {
+      if (t == NULL) *t = _left->GetToken();
+      if (msg == NULL) *msg = "expected boolean type expression in left operand";
+      return false;
+    } else if (!(rightType->Match(tm->GetBool()))) {
+      if (t == NULL) *t = _right->GetToken();
+      if (msg == NULL) *msg = "expected boolean type expression in right operand";
+      return false;
+    }
+    return true;
+  case opEqual:
+  case opNotEqual:
+    if (!(leftType->Match(tm->GetBool()) || leftType->Match(tm->GetChar()) || leftType->Match(tm->GetInt()))) {
+      if (t == NULL) *t = _left->GetToken();
+      if (msg == NULL) *msg = "expected boolean or character or integer type expression in left operand";
+      return false;
+    } else if (!(rightType->Match(leftType))) {
+      if (t == NULL) *t = _right->GetToken();
+      if (msg == NULL) *msg = "different type between right and left operand";
+      return false;
+    }
+    return true;
+  case opBiggerEqual:
+  case opBiggerThan:
+  case opLessEqual:
+  case opLessThan:
+    if (!(leftType->Match(tm->GetChar()) || leftType->Match(tm->GetInt()))) {
+      if (t == NULL) *t = _left->GetToken();
+      if (msg == NULL) *msg = "expected character or integer type expression in left operand";
+      return false;
+    } else if (!(rightType->Match(leftType))) {
+      if (t == NULL) *t = _right->GetToken();
+      if (msg == NULL) *msg = "different type between right and left operand";
+      return false;
+    }
+    return true;
+  default: // Never reached code
+    return false;
+  }
 }
 
 const CType* CAstBinaryOp::GetType(void) const
@@ -818,7 +877,7 @@ const CType* CAstBinaryOp::GetType(void) const
   case opBiggerThan:
   case opBiggerEqual:
     return CTypeManager::Get()->GetBool();
-  default:
+  default: // Never reached code
     return NULL;
   }
 }
@@ -888,7 +947,29 @@ CAstExpression* CAstUnaryOp::GetOperand(void) const
 
 bool CAstUnaryOp::TypeCheck(CToken *t, string *msg) const
 {
-  return true;
+  bool ret = _operand->TypeCheck(t, msg);
+  if (!ret) return false;
+  const CType *eType = _operand->GetType();
+  CTypeManager* tm = CTypeManager::Get();
+  switch (GetOperation()) {
+  case opNeg:
+  case opPos:
+    if(!(eType->Match(tm->GetInt()))) {
+      if (t == NULL) *t = _operand->GetToken();
+      if (msg == NULL) *msg = "expected integer type expression in the operand";
+      return false;
+    }
+    return true;
+  case opNot:
+    if(!(eType->Match(tm->GetBool()))) {
+      if (t == NULL) *t = _operand->GetToken();
+      if (msg == NULL) *msg = "expected boolean type expression in the operand";
+      return false;
+    }
+    return true;
+  default: // Never reached code
+    return false;
+  }
 }
 
 const CType* CAstUnaryOp::GetType(void) const
@@ -899,7 +980,7 @@ const CType* CAstUnaryOp::GetType(void) const
       return CTypeManager::Get()->GetInt();
     case opNot:
       return CTypeManager::Get()->GetBool();
-    default:
+    default: // Never reached code
       return NULL;
   }
 }
