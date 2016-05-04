@@ -1229,6 +1229,35 @@ CAstExpression* CAstFunctionCall::GetArg(int index) const
 
 bool CAstFunctionCall::TypeCheck(CToken *t, string *msg) const
 {
+  const CSymProc* symProc = GetSymbol();
+  // check the number of arguments
+  if (symProc->GetNParams() != GetNArgs()) {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "number of arguments does not match the number of parameters";
+    return false;
+  }
+  // check recursively
+  for (CAstExpression* it : _arg) {
+    if (!it->TypeCheck(t, msg)) {
+      return false;
+    }
+  }
+  // check whether arguments' type matches parameters' type
+  int n = symProc->GetNParams();
+  for (int i = 0; i < n; i++) {
+    const CSymParam* param = symProc->GetParam(i);
+    CAstExpression* argument = GetArg(i);
+    if (param->GetDataType() == NULL) {
+      if (t != NULL) *t = argument->GetToken();
+      if (msg != NULL) *msg = "argument's type is invalid";
+      return false;
+    }
+    if (!param->GetDataType()->Match(argument->GetType())) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "argument's type does not match with the parameter";
+      return false;
+    }
+  }
   return true;
 }
 
