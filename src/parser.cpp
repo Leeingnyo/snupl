@@ -349,7 +349,13 @@ CAstExpression* CParser::simpleexpr(CAstScope *s)
     }
     CToken t;
     Consume(tTermOp, &t);
-    n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, term(s) ); // wrap the term with unary operator
+    n = term(s);
+    CAstConstant* constant = dynamic_cast<CAstConstant*>(n);
+    if (constant != NULL && constant->GetType()->Match(CTypeManager::Get()->GetInt())) {
+      if (t.GetValue() == "-") constant->SetValue(-(constant->GetValue()));
+    } else {
+      n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, n ); // wrap the term with unary operator
+    }
   } else {
     n = term(s);
   }
