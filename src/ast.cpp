@@ -1402,13 +1402,18 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg) const
 const CType* CAstArrayDesignator::GetType(void) const
 {
   const CType* ret = _symbol->GetDataType();
-  for (int i = 0; i < _idx.size(); i++) {
-    if (!ret->IsArray()) return NULL; // if it access the non array, type is INVALID
-    const CArrayType* arrType = dynamic_cast<const CArrayType*>(ret);
-    assert(arrType);
-    ret = arrType->GetInnerType(); // get the inner type for index count
+  try {
+    if (ret->IsPointer()) ret = dynamic_cast<const CPointerType*>(ret)->GetBaseType();
+    for (int i = 0; i < _idx.size(); i++) {
+      if (!ret->IsArray()) return NULL; // if it access the non array, type is INVALID
+      const CArrayType* arrType = dynamic_cast<const CArrayType*>(ret);
+      assert(arrType);
+      ret = arrType->GetInnerType(); // get the inner type for index count
+    }
+    return ret;
+  } catch (...) {
+    return NULL;
   }
-  return ret;
 }
 
 ostream& CAstArrayDesignator::print(ostream &out, int indent) const
