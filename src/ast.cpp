@@ -1339,6 +1339,11 @@ const CSymbol* CAstDesignator::GetSymbol(void) const
 
 bool CAstDesignator::TypeCheck(CToken *t, string *msg) const
 {
+  if (GetType() == NULL) {
+    if (t == NULL) *t = GetToken();
+    if (msg == NULL) *msg = "Invalid Type for the symbol";
+    return false;
+  }
   return true;
 }
 
@@ -1424,6 +1429,20 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg) const
   bool result = true;
 
   assert(_done);
+  // check if the symbol is array or pointer of array
+  const CType* ret = _symbol->GetDataType();
+  if (ret->IsPointer()) ret = dynamic_cast<const CPointerType*>(ret)->GetBaseType();
+  if (!ret->IsArray()) {
+    if (t == NULL) *t = GetToken();
+    if (msg == NULL) *msg = "symbol's type should be array or pointer of array";
+    return false;
+  }
+  // GetType is checking with the loop, so if it returns NULL, it is invalid because of too many indices
+  if (GetType() == NULL) {
+    if (t == NULL) *t = GetToken();
+    if (msg == NULL) *msg = "Too many indices";
+    return false;
+  }
 
   return result;
 }
