@@ -299,7 +299,8 @@ CAstExpression* CParser::parameter(CAstScope* s)
   CAstExpression* arg = expression(s);
   CAstDesignator* dsn = dynamic_cast<CAstDesignator*>(arg);
   if (dsn != NULL) {
-    if(dsn->GetType()->IsArray()) { // if expression's type is array, wrap it with opAddress
+    if (dsn->GetType() == NULL) return arg;
+    if (dsn->GetType()->IsArray()) { // if expression's type is array, wrap it with opAddress
       CToken defaultToken;
       return new CAstSpecialOp(defaultToken, opAddress, arg);
     }
