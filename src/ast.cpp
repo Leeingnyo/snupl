@@ -1138,7 +1138,33 @@ CAstExpression* CAstSpecialOp::GetOperand(void) const
 
 bool CAstSpecialOp::TypeCheck(CToken *t, string *msg) const
 {
-  return false;
+  switch (GetOperation()) {
+  case opAddress:
+    // check if the type is array
+    // : we only use opAddress for implicit change on array argument
+    if(!_operand->GetType()->IsArray()) {
+      if (t == NULL) *t = GetToken();
+      if (msg == NULL) *msg = "opAddress is only used on array type";
+      return false;
+    }
+    return true;
+  case opDeref:
+    // check if the type is pointer type
+    if (!_operand->GetType()->IsPointer()) {
+      if (t == NULL) *t = GetToken();
+      if (msg == NULL) *msg = "opDeref should be used on pointer type";
+      return false;
+    }
+    return true;
+  case opCast:
+    // opCast is never used
+    // so return false for the type checking
+    if (t == NULL) *t = GetToken();
+    if (msg == NULL) *msg = "opCast is never used";
+    return false;
+  default: // Never reached code
+    return false;
+  }
 }
 
 const CType* CAstSpecialOp::GetType(void) const
