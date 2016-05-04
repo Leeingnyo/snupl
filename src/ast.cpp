@@ -378,6 +378,24 @@ CAstExpression* CAstStatAssign::GetRHS(void) const
 
 bool CAstStatAssign::TypeCheck(CToken *t, string *msg) const
 {
+  bool chk = _lhs->TypeCheck(t, msg) && _rhs->TypeCheck(t, msg);
+  if (!chk) return false;
+
+  CTypeManager *tm = CTypeManager::Get();
+  const CType* lhsType = _lhs->GetType();
+
+  // Do not allow array type assignment
+  if (!lhsType->IsScalar()) {
+    if (t != NULL) *t = _rhs->GetToken();
+    if (msg != NULL) *msg = "left handside designator must be scalar type";
+    return false;
+  }
+  // check for same type of lhs and rhs
+  if (!_rhs->GetType()->Match(lhsType)) {
+    if (t != NULL) *t = _rhs->GetToken();
+    if (msg != NULL) *msg = "right handside expression must be same type as left handside designator";
+    return false;
+  }
   return true;
 }
 
@@ -494,6 +512,27 @@ CAstExpression* CAstStatReturn::GetExpression(void) const
 
 bool CAstStatReturn::TypeCheck(CToken *t, string *msg) const
 {
+  const CType *st = GetScope()->GetType();
+  CAstExpression *e = GetExpression();
+  if (st->Match(CTypeManager::Get()->GetNull())) {
+    if (e != NULL) {
+      if (t != NULL) *t = e->GetToken();
+      if (msg != NULL) *msg = "superfluous expression after return.";
+      return false;
+    }
+  } else {
+    if (e == NULL) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "expression expected after return.";
+      return false;
+    }
+    if (!e->TypeCheck(t, msg)) return false;
+    if (!st->Match(e->GetType())) {
+      if (t != NULL) *t = e->GetToken();
+      if (msg != NULL) *msg = "return type mismatch.";
+      return false;
+    }
+  }
   return true;
 }
 
@@ -576,6 +615,17 @@ CAstStatement* CAstStatIf::GetElseBody(void) const
 
 bool CAstStatIf::TypeCheck(CToken *t, string *msg) const
 {
+  // check recursively
+  bool chk = _cond->TypeCheck(t, msg) && _ifBody->TypeCheck(t, msg);
+  if (!chk) return false;
+  if (_elseBody != NULL && !_elseBody->TypeCheck(t, msg))
+    return false;
+  CTypeManager *tm = CTypeManager::Get();
+  if (!_cond->GetType()->Match(tm->GetBool())) { // condition must be boolean
+    if (t != NULL) *t = _cond->GetToken();
+    if (msg != NULL) *msg = "expected boolean type condition";
+    return false;
+  }
   return true;
 }
 
@@ -676,6 +726,18 @@ CAstStatement* CAstStatWhile::GetBody(void) const
 
 bool CAstStatWhile::TypeCheck(CToken *t, string *msg) const
 {
+  // check recursively
+  bool chk = _cond->TypeCheck(t, msg);
+  if (!chk) return false;
+  if (_body != NULL && !_body->TypeCheck(t, msg))
+    return false;
+
+  CTypeManager *tm = CTypeManager::Get();
+  if (!_cond->GetType()->Match(tm->GetBool())) { // condition must be boolean
+    if (t != NULL) *t = _cond->GetToken();
+    if (msg != NULL) *msg = "expected boolean type condition";
+    return false;
+  }
   return true;
 }
 
