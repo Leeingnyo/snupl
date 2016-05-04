@@ -166,7 +166,22 @@ CAstStatement* CAstScope::GetStatementSequence(void) const
 bool CAstScope::TypeCheck(CToken *t, string *msg) const
 {
   bool result = true;
-
+  try {
+    CAstStatement *s = _statseq;
+    // check for all statements in the statement sequence
+    while (result && (s != NULL)) {
+      result = s->TypeCheck(t, msg);
+      s = s->GetNext();
+    }
+    // check for all scopes in the children
+    vector<CAstScope*>::const_iterator it = _children.begin();
+    while (result && (it != _children.end())) {
+      result = (*it)->TypeCheck(t, msg);
+      it++;
+    }
+  } catch (...) {
+    result = false;
+  }
   return result;
 }
 
