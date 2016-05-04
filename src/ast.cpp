@@ -798,15 +798,18 @@ CAstExpression* CAstBinaryOp::GetRight(void) const
 
 bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
 {
+  // check recursively
   bool ret = _left->TypeCheck(t,msg) && _right->TypeCheck(t,msg);
   CTypeManager* tm = CTypeManager::Get();
   if (!ret) return false;
+
   const CType* leftType = _left->GetType(), *rightType = _right->GetType();
   switch (GetOperation()) {
   case opAdd:
   case opMul:
   case opSub:
   case opDiv:
+    // lhs : integer, rhs : integer
     if (!(leftType->Match(tm->GetInt()))) {
       if (t == NULL) *t = _left->GetToken();
       if (msg == NULL) *msg = "expected integer type expression in left operand";
@@ -819,6 +822,7 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
     return true;
   case opAnd:
   case opOr:
+    // lhs : boolean, rhs : boolean
     if (!(leftType->Match(tm->GetBool()))) {
       if (t == NULL) *t = _left->GetToken();
       if (msg == NULL) *msg = "expected boolean type expression in left operand";
@@ -831,6 +835,8 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
     return true;
   case opEqual:
   case opNotEqual:
+    // lhs : boolean, character, integer
+    // rhs : must be same as lhs
     if (!(leftType->Match(tm->GetBool()) || leftType->Match(tm->GetChar()) || leftType->Match(tm->GetInt()))) {
       if (t == NULL) *t = _left->GetToken();
       if (msg == NULL) *msg = "expected boolean or character or integer type expression in left operand";
@@ -845,6 +851,8 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
   case opBiggerThan:
   case opLessEqual:
   case opLessThan:
+    // lhs : character, integer
+    // rhs : must be same as lhs
     if (!(leftType->Match(tm->GetChar()) || leftType->Match(tm->GetInt()))) {
       if (t == NULL) *t = _left->GetToken();
       if (msg == NULL) *msg = "expected character or integer type expression in left operand";
@@ -947,13 +955,16 @@ CAstExpression* CAstUnaryOp::GetOperand(void) const
 
 bool CAstUnaryOp::TypeCheck(CToken *t, string *msg) const
 {
+  // check recursively
   bool ret = _operand->TypeCheck(t, msg);
   if (!ret) return false;
+
   const CType *eType = _operand->GetType();
   CTypeManager* tm = CTypeManager::Get();
   switch (GetOperation()) {
   case opNeg:
   case opPos:
+    // operand : integer
     if(!(eType->Match(tm->GetInt()))) {
       if (t == NULL) *t = _operand->GetToken();
       if (msg == NULL) *msg = "expected integer type expression in the operand";
@@ -961,6 +972,7 @@ bool CAstUnaryOp::TypeCheck(CToken *t, string *msg) const
     }
     return true;
   case opNot:
+    // operand : boolean
     if(!(eType->Match(tm->GetBool()))) {
       if (t == NULL) *t = _operand->GetToken();
       if (msg == NULL) *msg = "expected boolean type expression in the operand";
