@@ -684,6 +684,18 @@ void CParser::varDecl(CAstScope *s, bool asParam)
       procSymb->AddParam(new CSymParam(paramIndex, it.GetValue(), ct));
 
     } else { // if varDecl is not used for declaration of parameter
+      // if the type is array, check for the explicit dimension
+      if (ct->IsArray()) {
+        const CType* type = ct;
+        while(type->IsArray()) {
+          const CArrayType* at = dynamic_cast<const CArrayType*>(type);
+          assert(at != NULL);
+          if (at->GetNElem() == CArrayType::OPEN) {
+            SetError(t, "array variable must have explicit dimension");
+          }
+          type = at->GetInnerType();
+        }
+      }
       CSymbol * sb = s->CreateVar(it.GetValue(), ct); // just create variable and add symbol
       if(!(s->GetSymbolTable()->AddSymbol(sb))) {
         SetError(it, "Duplicated variable declaration"); // if AddSymbol fails, it means duplicated identifier
