@@ -637,6 +637,9 @@ const CType* CParser::type()
     Consume(tLSBrak);
     if (_scanner->Peek().GetType() == tNumber) {
       CAstConstant* c = number();
+      if (c->GetValue() <= 0) {
+        SetError(c->GetToken(), "array dimension must be bigger than zero");
+      }
       v.push_back(c->GetValue());
     } else {
       v.push_back(CArrayType::OPEN); // if there is no number between square brackets, it is OPEN Dimension
