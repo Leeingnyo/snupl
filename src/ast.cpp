@@ -888,12 +888,12 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
   case opDiv:
     // lhs : integer, rhs : integer
     if (!(leftType->Match(tm->GetInt()))) {
-      if (t == NULL) *t = _left->GetToken();
-      if (msg == NULL) *msg = "expected integer type expression in left operand";
+      if (t != NULL) *t = _left->GetToken();
+      if (msg != NULL) *msg = "expected integer type expression in left operand";
       return false;
     } else if (!(rightType->Match(tm->GetInt()))) {
-      if (t == NULL) *t = _right->GetToken();
-      if (msg == NULL) *msg = "expected integer type expression in right operand";
+      if (t != NULL) *t = _right->GetToken();
+      if (msg != NULL) *msg = "expected integer type expression in right operand";
       return false;
     }
     return true;
@@ -901,7 +901,7 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
   case opOr:
     // lhs : boolean, rhs : boolean
     if (!(leftType->Match(tm->GetBool()))) {
-      if (t == NULL) *t = _left->GetToken();
+      if (t != NULL) *t = _left->GetToken();
       if (msg == NULL) *msg = "expected boolean type expression in left operand";
       return false;
     } else if (!(rightType->Match(tm->GetBool()))) {
@@ -915,12 +915,12 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
     // lhs : boolean, character, integer
     // rhs : must be same as lhs
     if (!(leftType->Match(tm->GetBool()) || leftType->Match(tm->GetChar()) || leftType->Match(tm->GetInt()))) {
-      if (t == NULL) *t = _left->GetToken();
-      if (msg == NULL) *msg = "expected boolean or character or integer type expression in left operand";
+      if (t != NULL) *t = _left->GetToken();
+      if (msg != NULL) *msg = "expected boolean or character or integer type expression in left operand";
       return false;
     } else if (!(rightType->Match(leftType))) {
-      if (t == NULL) *t = _right->GetToken();
-      if (msg == NULL) *msg = "different type between right and left operand";
+      if (t != NULL) *t = _right->GetToken();
+      if (msg != NULL) *msg = "different type between right and left operand";
       return false;
     }
     return true;
@@ -931,12 +931,12 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
     // lhs : character, integer
     // rhs : must be same as lhs
     if (!(leftType->Match(tm->GetChar()) || leftType->Match(tm->GetInt()))) {
-      if (t == NULL) *t = _left->GetToken();
-      if (msg == NULL) *msg = "expected character or integer type expression in left operand";
+      if (t != NULL) *t = _left->GetToken();
+      if (msg != NULL) *msg = "expected character or integer type expression in left operand";
       return false;
     } else if (!(rightType->Match(leftType))) {
-      if (t == NULL) *t = _right->GetToken();
-      if (msg == NULL) *msg = "different type between right and left operand";
+      if (t != NULL) *t = _right->GetToken();
+      if (msg != NULL) *msg = "different type between right and left operand";
       return false;
     }
     return true;
@@ -1043,16 +1043,16 @@ bool CAstUnaryOp::TypeCheck(CToken *t, string *msg) const
   case opPos:
     // operand : integer
     if(!(eType->Match(tm->GetInt()))) {
-      if (t == NULL) *t = _operand->GetToken();
-      if (msg == NULL) *msg = "expected integer type expression in the operand";
+      if (t != NULL) *t = _operand->GetToken();
+      if (msg != NULL) *msg = "expected integer type expression in the operand";
       return false;
     }
     return true;
   case opNot:
     // operand : boolean
     if(!(eType->Match(tm->GetBool()))) {
-      if (t == NULL) *t = _operand->GetToken();
-      if (msg == NULL) *msg = "expected boolean type expression in the operand";
+      if (t != NULL) *t = _operand->GetToken();
+      if (msg != NULL) *msg = "expected boolean type expression in the operand";
       return false;
     }
     return true;
@@ -1143,24 +1143,24 @@ bool CAstSpecialOp::TypeCheck(CToken *t, string *msg) const
     // check if the type is array
     // : we only use opAddress for implicit change on array argument
     if(!_operand->GetType()->IsArray()) {
-      if (t == NULL) *t = GetToken();
-      if (msg == NULL) *msg = "opAddress is only used on array type";
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "opAddress is only used on array type";
       return false;
     }
     return true;
   case opDeref:
     // check if the type is pointer type
     if (!_operand->GetType()->IsPointer()) {
-      if (t == NULL) *t = GetToken();
-      if (msg == NULL) *msg = "opDeref should be used on pointer type";
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "opDeref should be used on pointer type";
       return false;
     }
     return true;
   case opCast:
     // opCast is never used
     // so return false for the type checking
-    if (t == NULL) *t = GetToken();
-    if (msg == NULL) *msg = "opCast is never used";
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "opCast is never used";
     return false;
   default: // Never reached code
     return false;
@@ -1366,8 +1366,8 @@ const CSymbol* CAstDesignator::GetSymbol(void) const
 bool CAstDesignator::TypeCheck(CToken *t, string *msg) const
 {
   if (GetType() == NULL) {
-    if (t == NULL) *t = GetToken();
-    if (msg == NULL) *msg = "Invalid Type for the symbol";
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "Invalid Type for the symbol";
     return false;
   }
   return true;
@@ -1459,14 +1459,14 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg) const
   const CType* ret = _symbol->GetDataType();
   if (ret->IsPointer()) ret = dynamic_cast<const CPointerType*>(ret)->GetBaseType();
   if (!ret->IsArray()) {
-    if (t == NULL) *t = GetToken();
-    if (msg == NULL) *msg = "symbol's type should be array or pointer of array";
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "symbol's type should be array or pointer of array";
     return false;
   }
   // GetType is checking with the loop, so if it returns NULL, it is invalid because of too many indices
   if (GetType() == NULL) {
-    if (t == NULL) *t = GetToken();
-    if (msg == NULL) *msg = "Too many indices";
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "Too many indices";
     return false;
   }
 
