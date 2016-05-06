@@ -1463,6 +1463,20 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg) const
     if (msg != NULL) *msg = "symbol's type should be array or pointer of array";
     return false;
   }
+
+  //check for indices's type
+  for (int i = 0; i < _idx.size(); i++) {
+    CAstExpression* it = _idx[i];
+    assert(it != NULL);
+    result = it->TypeCheck(t, msg);
+    if (!result) return false;
+    if (!it->GetType()->Match(CTypeManager::Get()->GetInt())) {
+      if (t != NULL) *t = it->GetToken();
+      if (msg != NULL) *msg = "index in array designator must be integer type";
+      return false;
+    }
+  }
+
   // GetType is checking with the loop, so if it returns NULL, it is invalid because of too many indices
   if (GetType() == NULL) {
     if (t != NULL) *t = GetToken();
