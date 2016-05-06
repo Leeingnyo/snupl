@@ -1586,7 +1586,7 @@ bool CAstConstant::TypeCheck(CToken *t, string *msg) const
       return false;
     }
   } else if (_type->Match(tm->GetBool())) {
-    if (_value != 0 || _value != 1) {
+    if (_value != 0 && _value != 1) {
       if (t != NULL) *t = GetToken();
       if (msg != NULL) *msg = "invalid value for boolean type constant";
       return false;
