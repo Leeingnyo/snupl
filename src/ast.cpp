@@ -902,11 +902,11 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg) const
     // lhs : boolean, rhs : boolean
     if (!(leftType->Match(tm->GetBool()))) {
       if (t != NULL) *t = _left->GetToken();
-      if (msg == NULL) *msg = "expected boolean type expression in left operand";
+      if (msg != NULL) *msg = "expected boolean type expression in left operand";
       return false;
     } else if (!(rightType->Match(tm->GetBool()))) {
-      if (t == NULL) *t = _right->GetToken();
-      if (msg == NULL) *msg = "expected boolean type expression in right operand";
+      if (t != NULL) *t = _right->GetToken();
+      if (msg != NULL) *msg = "expected boolean type expression in right operand";
       return false;
     }
     return true;
