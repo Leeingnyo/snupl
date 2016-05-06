@@ -781,6 +781,9 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   } else {
     Consume(tColon);
     const CType* t = type();
+    if (!t->IsScalar()) {
+      SetError(idToken, "Return type should be scalar type");
+    }
     Consume(tSemicolon);
     n->GetSymbol()->SetReturnType(t); // we set return type here
   }
