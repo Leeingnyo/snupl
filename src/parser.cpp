@@ -67,7 +67,7 @@ CAstNode* CParser::Parse(void)
     if (_module != NULL) {
       CToken t;
       string msg;
-      //if (!_module->TypeCheck(&t, &msg)) SetError(t, msg);
+      if (!_module->TypeCheck(&t, &msg)) SetError(t, msg);
     }
   } catch (...) {
     _module = NULL;
@@ -637,6 +637,9 @@ const CType* CParser::type()
     Consume(tLSBrak);
     if (_scanner->Peek().GetType() == tNumber) {
       CAstConstant* c = number();
+      if (c->GetValue() <= 0) {
+        SetError(c->GetToken(), "array dimension must be bigger than zero");
+      }
       v.push_back(c->GetValue());
     } else {
       v.push_back(CArrayType::OPEN); // if there is no number between square brackets, it is OPEN Dimension
@@ -681,6 +684,18 @@ void CParser::varDecl(CAstScope *s, bool asParam)
       procSymb->AddParam(new CSymParam(paramIndex, it.GetValue(), ct));
 
     } else { // if varDecl is not used for declaration of parameter
+      // if the type is array, check for the explicit dimension
+      if (ct->IsArray()) {
+        const CType* type = ct;
+        while(type->IsArray()) {
+          const CArrayType* at = dynamic_cast<const CArrayType*>(type);
+          assert(at != NULL);
+          if (at->GetNElem() == CArrayType::OPEN) {
+            SetError(t, "array variable must have explicit dimension");
+          }
+          type = at->GetInnerType();
+        }
+      }
       CSymbol * sb = s->CreateVar(it.GetValue(), ct); // just create variable and add symbol
       if(!(s->GetSymbolTable()->AddSymbol(sb))) {
         SetError(it, "Duplicated variable declaration"); // if AddSymbol fails, it means duplicated identifier
@@ -766,6 +781,9 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   } else {
     Consume(tColon);
     const CType* t = type();
+    if (!t->IsScalar()) {
+      SetError(idToken, "Return type should be scalar type");
+    }
     Consume(tSemicolon);
     n->GetSymbol()->SetReturnType(t); // we set return type here
   }

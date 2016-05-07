@@ -342,7 +342,7 @@ const CPointerType* CTypeManager::GetVoidPtr(void) const
 const CPointerType* CTypeManager::GetPointer(const CType *basetype)
 {
   for (size_t i=0; i<_ptr.size(); i++) {
-    if ((_ptr[i]->GetBaseType()->Match(basetype))) {
+    if ((_ptr[i]->GetBaseType()->Compare(basetype))) {
       return _ptr[i];
     }
   }
