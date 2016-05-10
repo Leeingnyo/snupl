@@ -631,10 +631,18 @@ CAstStatement* CAstStatIf::GetElseBody(void) const
 bool CAstStatIf::TypeCheck(CToken *t, string *msg) const
 {
   // check recursively
-  bool chk = _cond->TypeCheck(t, msg) && _ifBody->TypeCheck(t, msg);
+  bool chk = _cond->TypeCheck(t, msg);
+  CAstStatement *n = _ifBody;
+  while (chk && n != NULL){
+    chk = n->TypeCheck(t, msg);
+    n = n->GetNext();
+  }
+  n = _elseBody;
+  if (chk && n!= NULL){
+    chk = n->TypeCheck(t, msg);
+    n = n->GetNext();
+  }
   if (!chk) return false;
-  if (_elseBody != NULL && !_elseBody->TypeCheck(t, msg))
-    return false;
   CTypeManager *tm = CTypeManager::Get();
   if (!_cond->GetType()->Match(tm->GetBool())) { // condition must be boolean
     if (t != NULL) *t = _cond->GetToken();
@@ -743,9 +751,12 @@ bool CAstStatWhile::TypeCheck(CToken *t, string *msg) const
 {
   // check recursively
   bool chk = _cond->TypeCheck(t, msg);
+  CAstStatement *n = _body;
+  while (chk && n != NULL){
+    chk = n->TypeCheck(t, msg);
+    n = n->GetNext();
+  }
   if (!chk) return false;
-  if (_body != NULL && !_body->TypeCheck(t, msg))
-    return false;
 
   CTypeManager *tm = CTypeManager::Get();
   if (!_cond->GetType()->Match(tm->GetBool())) { // condition must be boolean
