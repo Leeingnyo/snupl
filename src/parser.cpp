@@ -816,6 +816,10 @@ CAstDesignator* CParser::qualident(CAstScope *s, CToken idToken)
 
   const CSymbol *sb = s->GetSymbolTable()->FindSymbol(idToken.GetValue());
   if (sb == NULL) SetError(idToken, "undefined identifier");
+  // check if the qualident's identifier is procedure
+  if (dynamic_cast<const CSymProc*>(sb) != NULL) {
+    SetError(idToken, "Qualident should not be procedure type");
+  }
   const CType *st = sb->GetDataType();
   vector<CAstExpression*> ev;
   while (_scanner->Peek().GetType() == tLSBrak) {
