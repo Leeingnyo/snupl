@@ -638,7 +638,7 @@ bool CAstStatIf::TypeCheck(CToken *t, string *msg) const
     n = n->GetNext();
   }
   n = _elseBody;
-  if (chk && n!= NULL){
+  if (chk && n != NULL){
     chk = n->TypeCheck(t, msg);
     n = n->GetNext();
   }
