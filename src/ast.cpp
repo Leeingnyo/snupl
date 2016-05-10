@@ -405,6 +405,14 @@ bool CAstStatAssign::TypeCheck(CToken *t, string *msg) const
     if (msg != NULL) *msg = "left handside designator must be scalar type";
     return false;
   }
+
+  // check if the lhs is a procedure
+  if (dynamic_cast<const CSymProc*>(_lhs->GetSymbol()) != NULL) {
+    if (t != NULL) *t = _lhs->GetToken();
+    if (msg != NULL) *msg = "left handside designator cannot be a function";
+    return false;
+  }
+
   // check for same type of lhs and rhs
   if (!_rhs->GetType()->Match(lhsType)) {
     if (t != NULL) *t = _rhs->GetToken();
