@@ -374,6 +374,7 @@ CAstStatement* CAstStatement::GetNext(void) const
 
 CTacAddr* CAstStatement::ToTac(CCodeBlock *cb, CTacLabel *next)
 {
+  cb->AddInstr(new CTacInstr(opGoto, next));
   return NULL;
 }
 
