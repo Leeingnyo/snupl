@@ -515,6 +515,8 @@ void CAstStatCall::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstStatCall::ToTac(CCodeBlock *cb, CTacLabel *next)
 {
+  GetCall()->ToTac(cb);
+  cb->AddInstr(new CTacInstr(opGoto, next));
   return NULL;
 }
 
