@@ -463,6 +463,10 @@ void CAstStatAssign::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstStatAssign::ToTac(CCodeBlock *cb, CTacLabel *next)
 {
+  CTacAddr* dest = _lhs->ToTac(cb);
+  CTacAddr* src = _rhs->ToTac(cb);
+  cb->AddInstr(new CTacInstr(opAssign, dest, src));
+  cb->AddInstr(new CTacInstr(opGoto, next));
   return NULL;
 }
 
