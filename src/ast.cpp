@@ -1483,12 +1483,14 @@ void CAstDesignator::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstDesignator::ToTac(CCodeBlock *cb)
 {
-  return NULL;
+  return new CTacName(GetSymbol());
 }
 
 CTacAddr* CAstDesignator::ToTac(CCodeBlock *cb,
                                 CTacLabel *ltrue, CTacLabel *lfalse)
 {
+  cb->AddInstr(new CTacInstr(opEqual, ltrue, ToTac(cb), new CTacConst(1)));
+  cb->AddInstr(new CTacInstr(opGoto, lfalse));
   return NULL;
 }
 
