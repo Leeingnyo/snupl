@@ -1016,13 +1016,60 @@ void CAstBinaryOp::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstBinaryOp::ToTac(CCodeBlock *cb)
 {
-  return NULL;
+  CTypeManager* tm = CTypeManager::Get();
+  if (tm->GetBool()->Match(GetType())) {
+    CTacAddr* ret = cb->CreateTemp(tm->GetBool());
+    CTacLabel* trueLabel = cb->CreateLabel();
+    CTacLabel* falseLabel = cb->CreateLabel();
+    CTacLabel* nextLabel = cb->CreateLabel();
+    ToTac(cb, trueLabel, falseLabel);
+    cb->AddInstr(trueLabel);
+    cb->AddInstr(new CTacInstr(opAssign, ret, new CTacConst(1)));
+    cb->AddInstr(new CTacInstr(opGoto, nextLabel));
+    cb->AddInstr(falseLabel);
+    cb->AddInstr(new CTacInstr(opAssign, ret, new CTacConst(0)));
+    cb->AddInstr(nextLabel);
+    return ret;
+  } else {
+    CTacAddr* lhs = _left->ToTac(cb);
+    CTacAddr* rhs = _right->ToTac(cb);
+    CTacTemp* ret = cb->CreateTemp(GetType());
+    cb->AddInstr(new CTacInstr(GetOperation(), ret, lhs, rhs));
+    return ret;
+  }
 }
 
 CTacAddr* CAstBinaryOp::ToTac(CCodeBlock *cb,
                               CTacLabel *ltrue, CTacLabel *lfalse)
 {
-  return NULL;
+  // this is the case of opAnd, opOr, opEqual, opNotEqual,
+  // opLessThan, opLessEqual, opBiggerThan, opBiggerEqual
+  // _right must have same type as _left
+  CTypeManager* tm = CTypeManager::Get();
+  EOperation oper = GetOperation();
+  assert(tm->GetBool()->Match(GetType()));
+  switch (oper) {
+    case opAnd:
+    case opOr:
+    {
+      CTacLabel* midLabel = cb->CreateLabel();
+      if (oper == opAnd)
+        _left->ToTac(cb, midLabel, lfalse);
+      else // oper == opOr
+        _left->ToTac(cb, ltrue, midLabel);
+      cb->AddInstr(midLabel);
+      _right->ToTac(cb, ltrue, lfalse);
+      return NULL;
+    }
+    default: //relational operations
+    {
+      CTacAddr* lhs = _left->ToTac(cb);
+      CTacAddr* rhs = _right->ToTac(cb);
+      cb->AddInstr(new CTacInstr(oper, ltrue, lhs, rhs));
+      cb->AddInstr(new CTacInstr(opGoto, lfalse));
+      return NULL;
+    }
+  }
 }
 
 
@@ -1119,12 +1166,41 @@ void CAstUnaryOp::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstUnaryOp::ToTac(CCodeBlock *cb)
 {
-  return NULL;
+  CTypeManager* tm = CTypeManager::Get();
+  EOperation oper = GetOperation();
+  switch (oper) {
+    case opNeg:
+    case opPos:
+    {
+      CTacAddr* operand = _operand->ToTac(cb);
+      CTacTemp* ret = cb->CreateTemp(GetType());
+      cb->AddInstr(new CTacInstr(GetOperation(), ret, operand));
+      return ret;
+    }
+    default: // opNot
+    {
+      CTacAddr* ret = cb->CreateTemp(tm->GetBool());
+      CTacLabel* trueLabel = cb->CreateLabel();
+      CTacLabel* falseLabel = cb->CreateLabel();
+      CTacLabel* nextLabel = cb->CreateLabel();
+      ToTac(cb, trueLabel, falseLabel);
+      cb->AddInstr(trueLabel);
+      cb->AddInstr(new CTacInstr(opAssign, ret, new CTacConst(1)));
+      cb->AddInstr(new CTacInstr(opGoto, nextLabel));
+      cb->AddInstr(falseLabel);
+      cb->AddInstr(new CTacInstr(opAssign, ret, new CTacConst(0)));
+      cb->AddInstr(nextLabel);
+      return ret;
+    }
+  }
 }
 
 CTacAddr* CAstUnaryOp::ToTac(CCodeBlock *cb,
                              CTacLabel *ltrue, CTacLabel *lfalse)
 {
+  //opNot
+  assert(CTypeManager::Get()->GetBool()->Match(GetType()));
+  _operand->ToTac(cb, lfalse, ltrue); // change the order of label for not operation
   return NULL;
 }
 
@@ -1230,7 +1306,10 @@ void CAstSpecialOp::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstSpecialOp::ToTac(CCodeBlock *cb)
 {
-  return NULL;
+  CTacAddr* operand = _operand->ToTac(cb);
+  CTacTemp* temp = cb->CreateTemp(GetType());
+  cb->AddInstr(new CTacInstr(GetOperation(), temp, operand));
+  return temp;
 }
 
 
