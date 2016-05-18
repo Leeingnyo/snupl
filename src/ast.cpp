@@ -745,6 +745,30 @@ void CAstStatIf::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstStatIf::ToTac(CCodeBlock *cb, CTacLabel *next)
 {
+  CTacLabel* ifLabel = cb->CreateLabel();
+  CTacLabel* elseLabel = cb->CreateLabel();
+  CTacLabel* endLabel = cb->CreateLabel();
+  CAstStatement *ifStats = GetIfBody();
+  CAstStatement *elseStats = GetElseBody();
+
+  _cond->ToTac(cb, ifLabel, elseLabel);
+  cb->AddInstr(ifLabel);
+  while (ifStats != NULL) {
+    CTacLabel *next = cb->CreateLabel();
+    ifStats->ToTac(cb, next);
+    cb->AddInstr(next);
+    ifStats = ifStats->GetNext();
+  }
+  cb->AddInstr(new CTacInstr(opGoto, endLabel));
+  cb->AddInstr(elseLabel);
+  while (elseStats != NULL) {
+    CTacLabel *next = cb->CreateLabel();
+    elseStats->ToTac(cb, next);
+    cb->AddInstr(next);
+    elseStats = elseStats->GetNext();
+  }
+  cb->AddInstr(endLabel);
+  cb->AddInstr(new CTacInstr(opGoto, next));
   return NULL;
 }
 
