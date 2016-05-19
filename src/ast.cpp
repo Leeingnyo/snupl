@@ -1900,7 +1900,7 @@ CTacAddr* CAstStringConstant::ToTac(CCodeBlock *cb)
 CTacAddr* CAstStringConstant::ToTac(CCodeBlock *cb,
                                 CTacLabel *ltrue, CTacLabel *lfalse)
 {
-  // never reacehd code
+  // never reached code
   return NULL;
 }
 
