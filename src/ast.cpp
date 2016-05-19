@@ -1715,13 +1715,80 @@ void CAstArrayDesignator::toDot(ostream &out, int indent) const
 
 CTacAddr* CAstArrayDesignator::ToTac(CCodeBlock *cb)
 {
-  return NULL;
+  //dereference if the symbol is pointer type
+  const CArrayType* arrayType;
+  CAstExpression* arrayPointer;
+  CToken emptyToken = new CToken();
+
+  if (_symbol->GetDataType()->IsPointer()) {
+    const CPointerType* pointerType = dynamic_cast<const CPointerType*>(_symbol->GetDataType());
+    arrayType = dynamic_cast<const CArrayType*>(pointerType->GetBaseType());
+    arrayPointer = new CAstDesignator(emptyToken, _symbol);
+  } else {
+    arrayType = dynamic_cast<const CArrayType*>(_symbol->GetDataType());
+    arrayPointer = new CAstSpecialOp(emptyToken, opAddress, new CAstDesignator(emptyToken, _symbol));
+  }
+  assert(arrayType != NULL);
+
+  //fill the empty indices
+  const CType* t = arrayType;
+  int cnt = 0;
+  while(t->IsArray()) {
+    if (cnt >= _idx.size()) {
+      _idx.push_back(0);
+    }
+    cnt++;
+    t = dynamic_cast<const CArrayType*>(t)->GetInnerType();
+  }
+
+  //get size from type, t is already unwrapped
+  int size = t->GetSize();
+
+  //use function to find out the offset
+  CTypeManager* tm = CTypeManager::Get();
+  CAstExpression* offset;
+  const CSymProc* dimSym = dynamic_cast<const CSymProc*>(cb->GetOwner()->GetSymbolTable()->FindSymbol("DIM"));
+  const CSymProc* dofsSym = dynamic_cast<const CSymProc*>(cb->GetOwner()->GetSymbolTable()->FindSymbol("DOFS"));
+  for (int i = 0; i < _idx.size(); i++) {
+    if (i==0) {
+      offset = _idx[i];
+    } else {
+      offset = new CAstBinaryOp(emptyToken, opAdd, offset, _idx[i]);
+    }
+    if (i == _idx.size() - 1) {
+      offset = new CAstBinaryOp(emptyToken, opMul, offset, new CAstConstant(emptyToken, tm->GetInt(), size));
+    } else {
+      CAstFunctionCall* dimCall = new CAstFunctionCall(emptyToken, dimSym);
+      dimCall->AddArg(arrayPointer);
+      dimCall->AddArg(new CAstConstant(emptyToken, tm->GetInt(), i+2));
+      offset = new CAstBinaryOp(emptyToken, opMul, offset, dimCall);
+    }
+  }
+
+  //add the offset to the symbol's address
+  CAstFunctionCall* dofsCall = new CAstFunctionCall(emptyToken, dofsSym);
+  dofsCall->AddArg(arrayPointer);
+  CAstExpression* address = new CAstBinaryOp(emptyToken, opAdd, offset, dofsCall);
+  address = new CAstBinaryOp(emptyToken, opAdd, arrayPointer, address);
+
+  //return the referencing variable
+  CTacAddr* result = dynamic_cast<CTacAddr*>(address->ToTac(cb));
+  CTacName* resultName = dynamic_cast<CTacName*>(result);
+  if (resultName == NULL) {
+    CTacTemp* temp = cb->CreateTemp(tm->GetInt());
+    cb->AddInstr(new CTacInstr(opAssign, temp, result));
+    resultName = temp;
+  }
+  return new CTacReference(resultName->GetSymbol());
 }
 
 CTacAddr* CAstArrayDesignator::ToTac(CCodeBlock *cb,
                                      CTacLabel *ltrue, CTacLabel *lfalse)
 {
-  return NULL;
+  CTacAddr* ret = ToTac(cb);
+  cb->AddInstr(new CTacInstr(opEqual, ltrue, ret, new CTacConst(1)));
+  cb->AddInstr(new CTacInstr(opGoto, lfalse));
+  return ret;
 }
 
 
