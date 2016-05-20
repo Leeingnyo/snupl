@@ -1731,11 +1731,12 @@ CTacAddr* CAstArrayDesignator::ToTac(CCodeBlock *cb)
   assert(arrayType != NULL);
 
   //fill the empty indices
+  CTypeManager* tm = CTypeManager::Get();
   const CType* t = arrayType;
   int cnt = 0;
   while(t->IsArray()) {
     if (cnt >= _idx.size()) {
-      _idx.push_back(0);
+      _idx.push_back(new CAstConstant(emptyToken, tm->GetInt(), 0));
     }
     cnt++;
     t = dynamic_cast<const CArrayType*>(t)->GetInnerType();
@@ -1745,12 +1746,11 @@ CTacAddr* CAstArrayDesignator::ToTac(CCodeBlock *cb)
   int size = t->GetSize();
 
   //use function to find out the offset
-  CTypeManager* tm = CTypeManager::Get();
   CAstExpression* offset;
   const CSymProc* dimSym = dynamic_cast<const CSymProc*>(cb->GetOwner()->GetSymbolTable()->FindSymbol("DIM"));
   const CSymProc* dofsSym = dynamic_cast<const CSymProc*>(cb->GetOwner()->GetSymbolTable()->FindSymbol("DOFS"));
   for (int i = 0; i < _idx.size(); i++) {
-    if (i==0) {
+    if (i == 0) {
       offset = _idx[i];
     } else {
       offset = new CAstBinaryOp(emptyToken, opAdd, offset, _idx[i]);
