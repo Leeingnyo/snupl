@@ -252,6 +252,8 @@ CTacAddr* CAstScope::ToTac(CCodeBlock *cb)
     cb->AddInstr(next);
     s = s->GetNext();
   }
+
+  cb->CleanupControlFlow();
   return NULL;
 }
 
