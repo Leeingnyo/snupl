@@ -229,7 +229,8 @@ int CArrayType::GetDataSize(void) const
 
 int CArrayType::GetAlign(void) const
 {
-  return GetInnerType()->GetAlign();
+  // arrays must be 4-aligned since we have integer meta-data at the beginning
+  return 4;
 }
 
 const CType* CArrayType::GetBaseType(void) const

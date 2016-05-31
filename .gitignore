@@ -2,6 +2,7 @@ obj/*.o
 test_scanner
 test_parser
 test_ir
+snuplc
 .DS_Store
 doc
 .vscode/
