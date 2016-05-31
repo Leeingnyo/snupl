@@ -468,6 +468,7 @@ size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
 {
   assert(symtab != NULL);
   vector<CSymbol*> slist = symtab->GetSymbols();
+  int size = 4;
 
   // TODO
   // foreach local symbol l in slist do
