@@ -308,7 +308,37 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
   switch (op) {
     // binary operators
     // dst = src1 op src2
-    // TODO
+    case opAdd:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      Load(i->GetSrc(2), "%ebx");
+      EmitInstruction("addl", "%ebx, %ebx");
+      Store(i->GetDest(), 'a');
+      break;
+    case opSub:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      Load(i->GetSrc(2), "%ebx");
+      EmitInstruction("subl", "%ebx, %ebx");
+      Store(i->GetDest(), 'a');
+      break;
+    case opMul:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      Load(i->GetSrc(2), "%ebx");
+      EmitInstruction("imull", "%ebx");
+      Store(i->GetDest(), 'a');
+      break;
+    case opDiv:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      Load(i->GetSrc(2), "%ebx");
+      EmitInstruction("idivl", "%ebx");
+      Store(i->GetDest(), 'a');
+      break;
+    case opAnd:
+      // never reached
+      break;
+    case opOr:
+      // never reached
+      break;
+
     // unary operators
     // dst = op src1
     // TODO
