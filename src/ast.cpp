@@ -1807,7 +1807,7 @@ CTacAddr* CAstArrayDesignator::ToTac(CCodeBlock *cb)
     cb->AddInstr(new CTacInstr(opAssign, temp, result));
     resultName = temp;
   }
-  return new CTacReference(resultName->GetSymbol());
+  return new CTacReference(resultName->GetSymbol(), _symbol);
 }
 
 CTacAddr* CAstArrayDesignator::ToTac(CCodeBlock *cb,
