@@ -278,7 +278,17 @@ class CTacReference: public CTacName {
     /// reference to the storage location
     ///
     /// param symbol value holding the reference
-    CTacReference(const CSymbol *symbol);
+    /// param deref  the symbol behind the reference
+    CTacReference(const CSymbol *symbol, const CSymbol *deref);
+
+    /// @}
+
+
+    /// @name properties
+    /// @{
+
+    /// @brief return the symbol
+    const CSymbol* GetDerefSymbol(void) const;
 
     /// @}
 
@@ -292,6 +302,9 @@ class CTacReference: public CTacName {
     virtual ostream& print(ostream &out, int indent=0) const;
 
     /// @}
+
+  protected:
+    const CSymbol *_deref;           ///< symbol this reference is pointing to
 };
 
 

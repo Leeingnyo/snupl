@@ -203,9 +203,14 @@ CTacTemp::CTacTemp(const CSymbol *symbol)
 //------------------------------------------------------------------------------
 // CTacReference
 //
-CTacReference::CTacReference(const CSymbol *symbol)
-  : CTacName(symbol)
+CTacReference::CTacReference(const CSymbol *symbol, const CSymbol *deref)
+  : CTacName(symbol), _deref(deref)
 {
+}
+
+const CSymbol* CTacReference::GetDerefSymbol(void) const
+{
+  return _deref;
 }
 
 ostream& CTacReference::print(ostream &out, int indent) const
