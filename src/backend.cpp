@@ -362,7 +362,10 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
 
     // pointer operations
     // dst = &src1
-    // TODO
+    case opAddress:
+      EmitInstruction("leal", Operand(i->GetSrc(1)) + ", %eax", cmt.str());
+      Store(i->GetDest(), 'a');
+      break;
     // dst = *src1
     case opDeref:
       // opDeref not generated for now
