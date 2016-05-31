@@ -315,7 +315,10 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
 
     // memory operations
     // dst = src1
-    // TODO
+    case opAssign:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      Store(i->GetDest(), 'a');
+      break;
 
     // pointer operations
     // dst = &src1
