@@ -372,14 +372,29 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
       EmitInstruction("# opDeref", "not implemented", cmt.str());
       break;
 
-
     // unconditional branching
     // goto dst
-    // TODO
+    case opGoto: {
+      const CTacLabel *label = dynamic_cast<const CTacLabel*>(i->GetDest());
+      assert(label != NULL);
+      EmitInstruction("jmp", Label(label), cmt.str());
+    } break;
 
     // conditional branching
     // if src1 relOp src2 then goto dst
-    // TODO
+    case opEqual:
+    case opNotEqual:
+    case opLessThan:
+    case opLessEqual:
+    case opBiggerThan:
+    case opBiggerEqual: {
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      Load(i->GetSrc(2), "%ebx");
+      EmitInstruction("cmpl", "%ebx, %eax");
+      const CTacLabel *label = dynamic_cast<const CTacLabel*>(i->GetDest());
+      assert(label != NULL);
+      EmitInstruction("j" + Condition(op), Label(label));
+    } break;
 
     // function call-related operations
     // TODO
