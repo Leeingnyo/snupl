@@ -341,7 +341,17 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
 
     // unary operators
     // dst = op src1
-    // TODO
+    case opNeg:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      EmitInstruction("negl", "%ebx");
+      Store(i->GetDest(), 'a');
+      break;
+    case opPos:
+      // never reached
+      break;
+    case opNot:
+      // never reached
+      break;
 
     // memory operations
     // dst = src1
