@@ -205,7 +205,7 @@ void CBackendx86::EmitScope(CScope *scope)
 
   if (local_size != 0) {
     EmitInstruction("cld", "", "memset local parameters to 0");
-    EmitInstruction("xor", "%eax, %eax", "memset local parameters to 0");
+    EmitInstruction("xorl", "%eax, %eax", "memset local parameters to 0");
     EmitInstruction("movl", Imm(local_size/4) + ", %ecx");
     EmitInstruction("movl", "%esp, %edi");
     EmitInstruction("rep", "stosl");
