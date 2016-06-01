@@ -404,9 +404,30 @@ string CBackendx86::Operand(const CTac *op)
 {
   string operand;
 
-  // TODO
-  // return a string representing op
-  // hint: take special care of references (op of type CTacReference)
+  const CTacConst *constant = dynamic_cast<const CTacConst*>(op);
+  if (constant != NULL){
+    operand = Imm(constant->GetValue());
+    return operand;
+  }
+
+  const CTacReference *reference = dynamic_cast<const CTacReference*>(op);
+  if (reference != NULL){
+    operand += reference->GetSymbol()->GetName();
+    const CSymbol *symbol = reference->GetSymbol();
+    EmitInstruction("movl", to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() + "), %edi");
+    return "(%edi)";
+  }
+
+  const CTacName *name = dynamic_cast<const CTacName*>(op);
+  if (name != NULL){
+    const CSymbol *symbol = name->GetSymbol();
+    if (dynamic_cast<const CSymGlobal*>(symbol) != NULL){
+      return symbol->GetName();
+    }
+    else { // local
+      return to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() +")";
+    }
+  }
 
   return operand;
 }
