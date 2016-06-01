@@ -219,7 +219,8 @@ void CBackendx86::EmitScope(CScope *scope)
 
   //Epilogue Insturctions
 
-  _out << endl << _ind << "# epilogue" << endl;
+  _out << endl << Label("exit") << ":" << endl;
+  _out << _ind << "# epilogue" << endl;
 
   EmitInstruction("addl", Imm(local_size) + ", %esp", "remove local variables");
   EmitInstruction("popl", "%edi", "load callee registers");
