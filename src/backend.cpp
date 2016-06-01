@@ -474,12 +474,32 @@ string CBackendx86::Condition(EOperation cond) const
 int CBackendx86::OperandSize(CTac *t) const
 {
   int size = 4;
-
-  // TODO
-  // compute the size for operand t of type CTacName
-  // Hint: you need to take special care of references (incl. references to pointers!)
-  //       and arrays. Compare your output to that of the reference implementation
-  //       if you are not sure.
+  const CType *type = NULL;
+  if (dynamic_cast<CTacName*>(t) != NULL) {
+    // CTacName
+    if (dynamic_cast<CTacReference*>(t) != NULL){
+      // CTacReference
+      const CSymbol *deref_symbol = dynamic_cast<CTacReference*>(t)->GetDerefSymbol();
+      type = deref_symbol-> GetDataType();
+    }
+    else {
+      const CSymbol *symbol = dynamic_cast<CTacName*>(t)->GetSymbol();
+      type = symbol-> GetDataType();
+    }
+  }
+  CTypeManager* tm = CTypeManager::Get();
+  if (type == NULL){ // for CTacConst
+    size = 4;
+  }
+  else if (type->Match(tm->GetInt())){
+    size = 4;
+  }
+  else if (type->Match(tm->GetBool())){
+    size = 1;
+  }
+  else if (type->Match(tm->GetChar())){
+    size = 1;
+  }
 
   return size;
 }
