@@ -402,17 +402,13 @@ void CBackendx86::Store(CTac *dst, char src_base, string comment)
 
 string CBackendx86::Operand(const CTac *op)
 {
-  string operand;
-
   const CTacConst *constant = dynamic_cast<const CTacConst*>(op);
   if (constant != NULL){
-    operand = Imm(constant->GetValue());
-    return operand;
+    return Imm(constant->GetValue());
   }
 
   const CTacReference *reference = dynamic_cast<const CTacReference*>(op);
   if (reference != NULL){
-    operand += reference->GetSymbol()->GetName();
     const CSymbol *symbol = reference->GetSymbol();
     EmitInstruction("movl", to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() + "), %edi");
     return "(%edi)";
@@ -428,8 +424,7 @@ string CBackendx86::Operand(const CTac *op)
       return to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() +")";
     }
   }
-
-  return operand;
+  return "";
 }
 
 string CBackendx86::Imm(int value) const
