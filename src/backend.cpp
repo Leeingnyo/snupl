@@ -133,10 +133,12 @@ void CBackendx86::EmitCode(void)
        << _ind << ".extern WriteLn" << endl
        << endl;
 
-  // TODO
-  // forall s in subscopes do
-  //   EmitScope(s)
-  // EmitScope(program)
+  CModule* module = _m;
+  for (CScope* s : module->GetSubscopes()) {
+    EmitScope(s);
+  }
+  EmitScope(module);
+
 
   _out << _ind << "# end of text section" << endl
        << _ind << "#-----------------------------------------" << endl
@@ -178,6 +180,7 @@ CScope* CBackendx86::GetScope(void) const
 void CBackendx86::EmitScope(CScope *scope)
 {
   assert(scope != NULL);
+  SetScope(scope);
 
   string label;
 
@@ -188,16 +191,45 @@ void CBackendx86::EmitScope(CScope *scope)
   _out << _ind << "# scope " << scope->GetName() << endl
        << label << ":" << endl;
 
-  // TODO
-  // ComputeStackOffsets(scope)
-  //
-  // emit function prologue
-  //
-  // forall i in instructions do
-  //   EmitInstruction(i)
-  //
-  // emit function epilogue
+  size_t local_size = ComputeStackOffsets(scope->GetSymbolTable(), 8, -16);
 
+  //Prologue Instructions
+  _out << endl << _ind << "# prologue" << endl;
+
+  EmitInstruction("pushl", "%ebp", "save ebp");
+  EmitInstruction("movl", "%esp, %ebp", "move ebp");
+  EmitInstruction("pushl", "%ebx");
+  EmitInstruction("pushl", "%esi");
+  EmitInstruction("pushl", "%edi", "save callee registers");
+  EmitInstruction("subl", Imm(local_size) + ", %esp", "make room for locals");
+
+  if (local_size != 0) {
+    EmitInstruction("cld", "", "memset local parameters to 0");
+    EmitInstruction("xorl", "%eax, %eax", "memset local parameters to 0");
+    EmitInstruction("movl", Imm(local_size/4) + ", %ecx");
+    EmitInstruction("movl", "%esp, %edi");
+    EmitInstruction("rep", "stosl");
+  }
+
+  EmitLocalData(scope);
+
+  _out << endl << _ind << "# function body" << endl;
+
+  EmitCodeBlock(scope->GetCodeBlock());
+
+  //Epilogue Insturctions
+
+  _out << endl << Label("exit") << ":" << endl;
+  _out << _ind << "# epilogue" << endl;
+
+  EmitInstruction("addl", Imm(local_size) + ", %esp", "remove local variables");
+  EmitInstruction("popl", "%edi", "load callee registers");
+  EmitInstruction("popl", "%esi", "load callee registers");
+  EmitInstruction("popl", "%ebx", "load callee registers");
+  EmitInstruction("popl", "%ebp", "load callee registers");
+
+  EmitInstruction("ret");
+  SetScope(NULL);
   _out << endl;
 }
 
