@@ -397,7 +397,27 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
     } break;
 
     // function call-related operations
-    // TODO
+    case opCall: {
+      EmitInstruction("call", Operand(i->GetSrc(1)), cmt.str());
+      // call
+      const CTacName *n = dynamic_cast<const CTacName*>(i->GetSrc(1));
+      assert(n != NULL);
+      const CSymProc *proc = dynamic_cast<const CSymProc*>(n->GetSymbol());
+      assert(proc != NULL);
+      EmitInstruction("addl", Imm(proc->GetNParams() * 4) + ", %esp");
+      // restore stack pointer
+      if (i->GetDest() != NULL)
+        Store(i->GetDest(), 'a', "get return value");
+      // if it has return value, store it to temp
+    } break;
+    case opReturn:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      EmitInstruction("jmp", Label("exit"));
+      break;
+    case opParam:
+      Load(i->GetSrc(1), "%eax", cmt.str());
+      EmitInstruction("pushl", "%eax");
+      break;
 
     // special
     case opLabel:
