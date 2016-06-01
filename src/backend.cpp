@@ -483,20 +483,12 @@ int CBackendx86::OperandSize(CTac *t) const
     }
   }
   CTypeManager* tm = CTypeManager::Get();
-  if (type == NULL){ // for CTacConst
-    size = 4;
+  if (type != NULL && (type->Match(tm->GetBool()) || type->Match(tm->GetChar()))){
+    return 1;
   }
-  else if (type->Match(tm->GetInt())){
-    size = 4;
+  else{
+    return 4;
   }
-  else if (type->Match(tm->GetBool())){
-    size = 1;
-  }
-  else if (type->Match(tm->GetChar())){
-    size = 1;
-  }
-
-  return size;
 }
 
 size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
