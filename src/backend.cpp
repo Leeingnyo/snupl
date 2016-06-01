@@ -211,6 +211,8 @@ void CBackendx86::EmitScope(CScope *scope)
     EmitInstruction("rep", "stosl");
   }
 
+  EmitLocalData(scope);
+
   _out << endl << _ind << "# function body" << endl;
 
   EmitCodeBlock(scope->GetCodeBlock());
