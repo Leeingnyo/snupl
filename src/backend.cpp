@@ -434,13 +434,29 @@ void CBackendx86::Store(CTac *dst, char src_base, string comment)
 
 string CBackendx86::Operand(const CTac *op)
 {
-  string operand;
+  const CTacConst *constant = dynamic_cast<const CTacConst*>(op);
+  if (constant != NULL){
+    return Imm(constant->GetValue());
+  }
 
-  // TODO
-  // return a string representing op
-  // hint: take special care of references (op of type CTacReference)
+  const CTacReference *reference = dynamic_cast<const CTacReference*>(op);
+  if (reference != NULL){
+    const CSymbol *symbol = reference->GetSymbol();
+    EmitInstruction("movl", to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() + "), %edi");
+    return "(%edi)";
+  }
 
-  return operand;
+  const CTacName *name = dynamic_cast<const CTacName*>(op);
+  if (name != NULL){
+    const CSymbol *symbol = name->GetSymbol();
+    if (dynamic_cast<const CSymGlobal*>(symbol) != NULL){
+      return symbol->GetName();
+    }
+    else { // local
+      return to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() +")";
+    }
+  }
+  return "";
 }
 
 string CBackendx86::Imm(int value) const
@@ -484,15 +500,34 @@ string CBackendx86::Condition(EOperation cond) const
 
 int CBackendx86::OperandSize(CTac *t) const
 {
-  int size = 4;
-
-  // TODO
-  // compute the size for operand t of type CTacName
-  // Hint: you need to take special care of references (incl. references to pointers!)
-  //       and arrays. Compare your output to that of the reference implementation
-  //       if you are not sure.
-
-  return size;
+  const CType *type = NULL;
+  if (dynamic_cast<CTacName*>(t) != NULL){
+    if (dynamic_cast<CTacReference*>(t) != NULL){
+      // CTacReference
+      const CSymbol *deref_symbol = dynamic_cast<CTacReference*>(t)->GetDerefSymbol();
+      if (deref_symbol->GetDataType()->IsPointer()) {
+        const CPointerType* pointer_type = dynamic_cast<const CPointerType*>(deref_symbol->GetDataType());
+        type = dynamic_cast<const CArrayType*>(pointer_type->GetBaseType());
+      } else {
+        type = dynamic_cast<const CArrayType*>(deref_symbol->GetDataType());
+      }
+      assert(type != NULL);
+      while(type->IsArray()) {
+        type = dynamic_cast<const CArrayType*>(type)->GetInnerType();
+      }
+    }
+    else {
+      const CSymbol *symbol = dynamic_cast<CTacName*>(t)->GetSymbol();
+      type = symbol->GetDataType();
+    }
+  }
+  CTypeManager* tm = CTypeManager::Get();
+  if (type != NULL && (type->Match(tm->GetBool()) || type->Match(tm->GetChar()))){
+    return 1;
+  }
+  else{
+    return 4;
+  }
 }
 
 size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
