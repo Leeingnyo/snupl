@@ -599,7 +599,7 @@ int CBackendx86::OperandSize(CTac *t) const
     }
     else {
       const CSymbol *symbol = dynamic_cast<CTacName*>(t)->GetSymbol();
-      type = symbol-> GetDataType();
+      type = symbol->GetDataType();
     }
   }
   CTypeManager* tm = CTypeManager::Get();
