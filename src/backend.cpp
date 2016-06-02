@@ -468,14 +468,21 @@ string CBackendx86::Condition(EOperation cond) const
 
 int CBackendx86::OperandSize(CTac *t) const
 {
-  int size = 4;
   const CType *type = NULL;
-  if (dynamic_cast<CTacName*>(t) != NULL) {
-    // CTacName
+  if (dynamic_cast<CTacName*>(t) != NULL){
     if (dynamic_cast<CTacReference*>(t) != NULL){
       // CTacReference
       const CSymbol *deref_symbol = dynamic_cast<CTacReference*>(t)->GetDerefSymbol();
-      type = deref_symbol-> GetDataType();
+      if (deref_symbol->GetDataType()->IsPointer()) {
+        const CPointerType* pointer_type = dynamic_cast<const CPointerType*>(deref_symbol->GetDataType());
+        type = dynamic_cast<const CArrayType*>(pointer_type->GetBaseType());
+      } else {
+        type = dynamic_cast<const CArrayType*>(deref_symbol->GetDataType());
+      }
+      assert(type != NULL);
+      while(type->IsArray()) {
+        type = dynamic_cast<const CArrayType*>(type)->GetInnerType();
+      }
     }
     else {
       const CSymbol *symbol = dynamic_cast<CTacName*>(t)->GetSymbol();
