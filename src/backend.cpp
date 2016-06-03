@@ -381,6 +381,7 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
       Store(i->GetDest(), 'a');
       break;
     case opDiv:
+      EmitInstruction("cdq");
       Load(i->GetSrc(1), "%eax", cmt.str());
       Load(i->GetSrc(2), "%ebx");
       EmitInstruction("idivl", "%ebx");
