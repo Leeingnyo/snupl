@@ -191,7 +191,7 @@ void CBackendx86::EmitScope(CScope *scope)
   _out << _ind << "# scope " << scope->GetName() << endl
        << label << ":" << endl;
 
-  size_t local_size = ComputeStackOffsets(scope->GetSymbolTable(), 8, -16);
+  size_t local_size = ComputeStackOffsets(scope->GetSymbolTable(), 8, -12);
 
   //Prologue Instructions
   _out << endl << _ind << "# prologue" << endl;
