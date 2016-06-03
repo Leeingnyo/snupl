@@ -365,13 +365,13 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
     case opAdd:
       Load(i->GetSrc(1), "%eax", cmt.str());
       Load(i->GetSrc(2), "%ebx");
-      EmitInstruction("addl", "%ebx, %ebx");
+      EmitInstruction("addl", "%ebx, %eax");
       Store(i->GetDest(), 'a');
       break;
     case opSub:
       Load(i->GetSrc(1), "%eax", cmt.str());
       Load(i->GetSrc(2), "%ebx");
-      EmitInstruction("subl", "%ebx, %ebx");
+      EmitInstruction("subl", "%ebx, %eax");
       Store(i->GetDest(), 'a');
       break;
     case opMul:
