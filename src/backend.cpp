@@ -616,7 +616,6 @@ size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
 {
   assert(symtab != NULL);
   vector<CSymbol*> slist = symtab->GetSymbols();
-  int p_i = 0;
   int l_size = 0;
 
   _out << _ind << "# stack offsets:" << endl;
@@ -633,8 +632,8 @@ size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
     }
     if (s->GetSymbolType() == ESymbolType::stParam){
       s->SetBaseRegister("%ebp");
-      s->SetOffset(param_ofs + 4 * p_i);
-      p_i++;
+      assert(dynamic_cast<CSymParam*>(s) != NULL);
+      s->SetOffset(param_ofs + 4 * dynamic_cast<CSymParam*>(s)->GetIndex());
     }
 
     if (s->GetSymbolType() == ESymbolType::stLocal || s->GetSymbolType() == ESymbolType::stParam)
