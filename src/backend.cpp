@@ -552,11 +552,13 @@ string CBackendx86::Operand(const CTac *op)
   const CTacName *name = dynamic_cast<const CTacName*>(op);
   if (name != NULL){
     const CSymbol *symbol = name->GetSymbol();
-    if (dynamic_cast<const CSymGlobal*>(symbol) != NULL){
-      return symbol->GetName();
-    }
-    else { // local
-      return to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() +")";
+    switch (symbol->GetSymbolType()){
+      case ESymbolType::stGlobal:
+      case ESymbolType::stProcedure:
+        return symbol->GetName();
+      case ESymbolType::stLocal:
+      case ESymbolType::stParam:
+        return to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() +")";
     }
   }
   return "";
