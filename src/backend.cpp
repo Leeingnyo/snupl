@@ -638,10 +638,11 @@ size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
     }
 
     if (s->GetSymbolType() == ESymbolType::stLocal || s->GetSymbolType() == ESymbolType::stParam)
-      _out << _ind << "#" << _ind
-          << s->GetOffset() << "(" << s->GetBaseRegister() << ")" << _ind
-          << s->GetDataType()->GetSize() << _ind
-          << "[" << _ind << s->GetName() << _ind << s->GetDataType() << endl;
+      _out << _ind << "#" << " "
+          << right << setw(6) << s->GetOffset() << "(" << s->GetBaseRegister() << ")" << " "
+          << setw(3) << s->GetDataType()->GetSize() << "  "
+          << "[" << " -"
+          << left << setw(8) << s->GetName() << " " << s->GetDataType() << " " << "]" << endl;
   }
   return l_size;
 }
