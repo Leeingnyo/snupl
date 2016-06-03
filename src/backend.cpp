@@ -616,20 +616,32 @@ size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
 {
   assert(symtab != NULL);
   vector<CSymbol*> slist = symtab->GetSymbols();
-  int size = 4;
+  int p_i = 0;
+  int l_size = 0;
 
-  // TODO
-  // foreach local symbol l in slist do
-  //   compute aligned offset on stack and store in symbol l
-  //   set base register to %ebp
-  //
-  // foreach parameter p in slist do
-  //   compute offset on stack and store in symbol p
-  //   set base register to %ebp
-  //
-  // align size
-  //
-  // dump stack frame to assembly file
+  _out << _ind << "# stack offsets:" << endl;
+  for (CSymbol *s : slist){
+    if (s->GetSymbolType() == ESymbolType::stLocal){
+      s->SetBaseRegister("%ebp");
+      const CType *type = s->GetDataType();
+      l_size += type->GetSize();
+      if (type->GetAlign() == 4 && l_size % 4 != 0){
+        // need set align
+        l_size += (4 - l_size % 4);
+      }
+      s->SetOffset(local_ofs - l_size);
+    }
+    if (s->GetSymbolType() == ESymbolType::stParam){
+      s->SetBaseRegister("%ebp");
+      s->SetOffset(param_ofs + 4 * p_i);
+      p_i++;
+    }
 
-  return size;
+    if (s->GetSymbolType() == ESymbolType::stLocal || s->GetSymbolType() == ESymbolType::stParam)
+      _out << _ind << "#" << _ind
+          << s->GetOffset() << "(" << s->GetBaseRegister() << ")" << _ind
+          << s->GetDataType()->GetSize() << _ind
+          << "[" << _ind << s->GetName() << _ind << s->GetDataType() << endl;
+  }
+  return l_size;
 }
