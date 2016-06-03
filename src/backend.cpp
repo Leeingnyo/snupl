@@ -313,8 +313,30 @@ void CBackendx86::EmitGlobalData(CScope *scope)
 void CBackendx86::EmitLocalData(CScope *scope)
 {
   assert(scope != NULL);
+  vector<CSymbol*> slist = scope->GetSymbolTable()->GetSymbols();
 
-  // TODO TODO!
+  for (CSymbol* s : slist) {
+    if (s->GetSymbolType() != stLocal) continue;
+    if (! s->GetDataType()->IsArray()) continue;
+
+    CSymLocal* localSym = dynamic_cast<CSymLocal*>(s);
+
+    const CArrayType* arrayType = dynamic_cast<const CArrayType*> (localSym->GetDataType());
+    int offset = localSym->GetOffset();
+    string reg = localSym->GetBaseRegister();
+
+    EmitInstruction("movl", Imm(arrayType->GetNDim()) + ", " + to_string(offset) + "("+reg+")", "Local Array " + s->GetName() + "'s dimension");
+
+    int dimCnt = 1;
+
+    while(arrayType != NULL) {
+      offset += 4;
+      EmitInstruction("movl", Imm(arrayType->GetNElem()) + ", " + to_string(offset) + "("+reg+")", "    dimension " + to_string(dimCnt));
+      arrayType = dynamic_cast<const CArrayType*>( arrayType->GetInnerType());
+      dimCnt++;
+    }
+  }
+
 }
 
 void CBackendx86::EmitCodeBlock(CCodeBlock *cb)
