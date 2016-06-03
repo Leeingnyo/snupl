@@ -466,7 +466,8 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
       // if it has return value, store it to temp
     } break;
     case opReturn:
-      Load(i->GetSrc(1), "%eax", cmt.str());
+      if (i->GetSrc(1) != NULL)
+        Load(i->GetSrc(1), "%eax", cmt.str());
       EmitInstruction("jmp", Label("exit"));
       break;
     case opParam:
