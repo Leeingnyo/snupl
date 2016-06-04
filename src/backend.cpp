@@ -365,13 +365,13 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
     case opAdd:
       Load(i->GetSrc(1), "%eax", cmt.str());
       Load(i->GetSrc(2), "%ebx");
-      EmitInstruction("addl", "%ebx, %ebx");
+      EmitInstruction("addl", "%ebx, %eax");
       Store(i->GetDest(), 'a');
       break;
     case opSub:
       Load(i->GetSrc(1), "%eax", cmt.str());
       Load(i->GetSrc(2), "%ebx");
-      EmitInstruction("subl", "%ebx, %ebx");
+      EmitInstruction("subl", "%ebx, %eax");
       Store(i->GetDest(), 'a');
       break;
     case opMul:
@@ -381,6 +381,7 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
       Store(i->GetDest(), 'a');
       break;
     case opDiv:
+      EmitInstruction("cdq");
       Load(i->GetSrc(1), "%eax", cmt.str());
       Load(i->GetSrc(2), "%ebx");
       EmitInstruction("idivl", "%ebx");
@@ -465,7 +466,8 @@ void CBackendx86::EmitInstruction(CTacInstr *i)
       // if it has return value, store it to temp
     } break;
     case opReturn:
-      Load(i->GetSrc(1), "%eax", cmt.str());
+      if (i->GetSrc(1) != NULL)
+        Load(i->GetSrc(1), "%eax", cmt.str());
       EmitInstruction("jmp", Label("exit"));
       break;
     case opParam:
