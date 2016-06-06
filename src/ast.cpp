@@ -1314,6 +1314,7 @@ CAstExpression* CAstSpecialOp::GetOperand(void) const
 
 bool CAstSpecialOp::TypeCheck(CToken *t, string *msg) const
 {
+  if(!_operand->TypeCheck(t, msg)) return false;
   switch (GetOperation()) {
   case opAddress:
     // check if the type is array
