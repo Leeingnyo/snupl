@@ -1254,12 +1254,16 @@ CTacAddr* CAstUnaryOp::ToTac(CCodeBlock *cb)
   EOperation oper = GetOperation();
   switch (oper) {
     case opNeg:
-    case opPos:
     {
       CTacAddr* operand = _operand->ToTac(cb);
       CTacTemp* ret = cb->CreateTemp(GetType());
       cb->AddInstr(new CTacInstr(GetOperation(), ret, operand));
       return ret;
+    }
+    case opPos:
+    {
+      CTacAddr* operand = _operand->ToTac(cb);
+      return operand;
     }
     default: // opNot
     // if an operator is opNot, add three address code with true, false label
