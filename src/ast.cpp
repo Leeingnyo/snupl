@@ -1314,6 +1314,7 @@ CAstExpression* CAstSpecialOp::GetOperand(void) const
 
 bool CAstSpecialOp::TypeCheck(CToken *t, string *msg) const
 {
+  if(!_operand->TypeCheck(t, msg)) return false;
   switch (GetOperation()) {
   case opAddress:
     // check if the type is array
@@ -1682,9 +1683,15 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg) const
   }
 
   // GetType is checking with the loop, so if it returns NULL, it is invalid because of too many indices
-  if (GetType() == NULL) {
+  // if it returns array type, this means indices are not full
+  const CType* type = GetType();
+  if (type == NULL) {
     if (t != NULL) *t = GetToken();
     if (msg != NULL) *msg = "Too many indices";
+    return false;
+  } else if (type->IsArray()) {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "Not enough indices";
     return false;
   }
 
