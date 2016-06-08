@@ -648,7 +648,7 @@ const CType* CParser::type()
     Consume(tRSBrak);
   }
   for (int i = v.size() - 1; i >= 0; i--) {
-    n = new CArrayType( (int) v[i], n); // make array type as linked list
+    n = CTypeManager::Get()->GetArray((int) v[i], n); // make array type as linked list
   }
   return n;
 }
