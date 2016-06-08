@@ -233,7 +233,7 @@ void CBackendx86::EmitScope(CScope *scope)
   EmitInstruction("popl", "%edi", "load callee registers");
   EmitInstruction("popl", "%esi", "load callee registers");
   EmitInstruction("popl", "%ebx", "load callee registers");
-  EmitInstruction("popl", "%ebp", "load callee registers");
+  EmitInstruction("popl", "%ebp", "load ebp");
 
   EmitInstruction("ret");
   SetScope(NULL);
