@@ -133,10 +133,12 @@ void CBackendx86::EmitCode(void)
        << _ind << ".extern WriteLn" << endl
        << endl;
 
+  // For all subscopes, emit codes for the scope
   CModule* module = _m;
   for (CScope* s : module->GetSubscopes()) {
     EmitScope(s);
   }
+  // then emit actual main function
   EmitScope(module);
 
 
@@ -194,6 +196,7 @@ void CBackendx86::EmitScope(CScope *scope)
   size_t local_size = ComputeStackOffsets(scope->GetSymbolTable(), 8, -12);
 
   //Prologue Instructions
+  // In prologue, the programs save callee registers and initialize local variables
   _out << endl << _ind << "# prologue" << endl;
 
   EmitInstruction("pushl", "%ebp", "save ebp");
@@ -203,6 +206,7 @@ void CBackendx86::EmitScope(CScope *scope)
   EmitInstruction("pushl", "%edi", "save callee registers");
   EmitInstruction("subl", Imm(local_size) + ", %esp", "make room for locals");
 
+  // if local variable exists, initialize it to zero.
   if (local_size != 0) {
     EmitInstruction("cld", "", "memset local parameters to 0");
     EmitInstruction("xorl", "%eax, %eax", "memset local parameters to 0");
@@ -211,13 +215,16 @@ void CBackendx86::EmitScope(CScope *scope)
     EmitInstruction("rep", "stosl");
   }
 
+  // emit meta data for array type local variable
   EmitLocalData(scope);
 
+  // Function Body Instruction
   _out << endl << _ind << "# function body" << endl;
 
   EmitCodeBlock(scope->GetCodeBlock());
 
   //Epilogue Insturctions
+  // In epilogue, remove the local variables and load calle registers
 
   _out << endl << Label("exit") << ":" << endl;
   _out << _ind << "# epilogue" << endl;
@@ -312,9 +319,12 @@ void CBackendx86::EmitGlobalData(CScope *scope)
 
 void CBackendx86::EmitLocalData(CScope *scope)
 {
+  // EmitLocalData emits code for local variables' meta data
+
   assert(scope != NULL);
   vector<CSymbol*> slist = scope->GetSymbolTable()->GetSymbols();
 
+  // for all local variable which is array type, insert meta data
   for (CSymbol* s : slist) {
     if (s->GetSymbolType() != stLocal) continue;
     if (! s->GetDataType()->IsArray()) continue;
@@ -325,12 +335,14 @@ void CBackendx86::EmitLocalData(CScope *scope)
     int offset = localSym->GetOffset();
     string reg = localSym->GetBaseRegister();
 
+    // insert dimension
     EmitInstruction("movl", Imm(arrayType->GetNDim()) + ", " + to_string(offset) + "("+reg+")", "Local Array " + s->GetName() + "'s dimension");
 
     int dimCnt = 1;
 
     while(arrayType != NULL) {
       offset += 4;
+      // insert element's cnt for each dimension
       EmitInstruction("movl", Imm(arrayType->GetNElem()) + ", " + to_string(offset) + "("+reg+")", "    dimension " + to_string(dimCnt));
       arrayType = dynamic_cast<const CArrayType*>( arrayType->GetInnerType());
       dimCnt++;
@@ -351,6 +363,7 @@ void CBackendx86::EmitCodeBlock(CCodeBlock *cb)
 
 void CBackendx86::EmitInstruction(CTacInstr *i)
 {
+  // Emit code for the instruction
   assert(i != NULL);
 
   ostringstream cmt;
@@ -539,25 +552,33 @@ void CBackendx86::Store(CTac *dst, char src_base, string comment)
 
 string CBackendx86::Operand(const CTac *op)
 {
+  // return the string for the tac operand
+
   const CTacConst *constant = dynamic_cast<const CTacConst*>(op);
+  // constant value is treated as immediate value
   if (constant != NULL){
     return Imm(constant->GetValue());
   }
 
   const CTacReference *reference = dynamic_cast<const CTacReference*>(op);
+  // if it is reference type, move the value to %edi and return (%edi)
   if (reference != NULL){
     const CSymbol *symbol = reference->GetSymbol();
     EmitInstruction("movl", to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() + "), %edi");
     return "(%edi)";
   }
 
+  // if it is not reference type
   const CTacName *name = dynamic_cast<const CTacName*>(op);
   if (name != NULL){
     const CSymbol *symbol = name->GetSymbol();
     switch (symbol->GetSymbolType()){
+      // for global and procedure type, return the name of the operand
       case ESymbolType::stGlobal:
       case ESymbolType::stProcedure:
         return symbol->GetName();
+
+      // for local and parameter type, return by offset and base register
       case ESymbolType::stLocal:
       case ESymbolType::stParam:
         return to_string(symbol->GetOffset()) + "(" + symbol->GetBaseRegister() +")";
@@ -607,10 +628,11 @@ string CBackendx86::Condition(EOperation cond) const
 
 int CBackendx86::OperandSize(CTac *t) const
 {
+  // OperandSize returns the expected bytes that CTac t occupies
   const CType *type = NULL;
   if (dynamic_cast<CTacName*>(t) != NULL){
     if (dynamic_cast<CTacReference*>(t) != NULL){
-      // CTacReference
+      // if it is CTacReference, unwrap the pointer in case the type is pointer
       const CSymbol *deref_symbol = dynamic_cast<CTacReference*>(t)->GetDerefSymbol();
       if (deref_symbol->GetDataType()->IsPointer()) {
         const CPointerType* pointer_type = dynamic_cast<const CPointerType*>(deref_symbol->GetDataType());
@@ -619,16 +641,20 @@ int CBackendx86::OperandSize(CTac *t) const
         type = dynamic_cast<const CArrayType*>(deref_symbol->GetDataType());
       }
       assert(type != NULL);
+      // also if it is array, get the inner type until it is not array
       while(type->IsArray()) {
         type = dynamic_cast<const CArrayType*>(type)->GetInnerType();
       }
     }
     else {
+      // if is is CTacName but not reference, get the symbol's data type
       const CSymbol *symbol = dynamic_cast<CTacName*>(t)->GetSymbol();
       type = symbol->GetDataType();
     }
   }
   CTypeManager* tm = CTypeManager::Get();
+  // if it is boolean or character, return 1
+  // else, return 4
   if (type != NULL && (type->Match(tm->GetBool()) || type->Match(tm->GetChar()))){
     return 1;
   }
@@ -640,6 +666,8 @@ int CBackendx86::OperandSize(CTac *t) const
 size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
                                         int param_ofs,int local_ofs)
 {
+  // ComputeStackOffsets returns the size of local variables
+  // and sets base register and offset of local variables and parameters
   assert(symtab != NULL);
   vector<CSymbol*> slist = symtab->GetSymbols();
   int l_size = 0;
@@ -647,21 +675,24 @@ size_t CBackendx86::ComputeStackOffsets(CSymtab *symtab,
   _out << _ind << "# stack offsets:" << endl;
   for (CSymbol *s : slist){
     if (s->GetSymbolType() == ESymbolType::stLocal){
+      // for local variable, base register is ebp and it needs to be aligned.
       s->SetBaseRegister("%ebp");
       const CType *type = s->GetDataType();
       l_size += type->GetSize();
       if (type->GetAlign() == 4 && l_size % 4 != 0){
-        // need set align
+        // set align only for 4 byte variable
         l_size += (4 - l_size % 4);
       }
       s->SetOffset(local_ofs - l_size);
     }
     if (s->GetSymbolType() == ESymbolType::stParam){
+      // for parameter, base register is ebp and offset is fixed to 4 * index + param_ofs
       s->SetBaseRegister("%ebp");
       assert(dynamic_cast<CSymParam*>(s) != NULL);
       s->SetOffset(param_ofs + 4 * dynamic_cast<CSymParam*>(s)->GetIndex());
     }
 
+    // print string for debugging purpose
     if (s->GetSymbolType() == ESymbolType::stLocal || s->GetSymbolType() == ESymbolType::stParam)
       _out << _ind << "#" << " "
           << right << setw(6) << s->GetOffset() << "(" << s->GetBaseRegister() << ")" << " "
