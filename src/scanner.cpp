@@ -78,6 +78,7 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tVar",                           ///< 'var' keyword
   "tProcedure",                     ///< 'procedure' keyword
   "tFunction",                      ///< 'function' keyword
+  "tBreak",                         ///< 'break' keyword
 
   "tChar",                          ///< a character
   "tString",                        ///< a string
@@ -123,6 +124,7 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tVar",                           ///< 'var' keyword
   "tProcedure",                     ///< 'procedure' keyword
   "tFunction",                      ///< 'function' keyword
+  "tBreak",                         ///< 'break' keyword
 
   "tChar (%s)",                     ///< a character
   "tString (%s)",                   ///< a string
@@ -549,6 +551,7 @@ EToken CScanner::TokenForIdentifier(string s) const
   else if (s == "var") return tVar;
   else if (s == "procedure") return tProcedure;
   else if (s == "function") return tFunction;
+  else if (s == "break") return tBreak;
   else return tId;
 }
 

@@ -78,6 +78,7 @@ enum EToken {
   tVar,                             ///< 'var' keyword
   tProcedure,                       ///< 'procedure' keyword
   tFunction,                        ///< 'function' keyword
+  tBreak,                           ///< 'break' keyword
 
   tChar,                            ///< a character
   tString,                          ///< a string

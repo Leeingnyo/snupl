@@ -432,7 +432,7 @@ class CAstStatement : public CAstNode {
     /// @name transformation into TAC
     /// @{
 
-    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next);
+    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end);
 
     /// @}
 
@@ -512,7 +512,7 @@ class CAstStatAssign : public CAstStatement {
     /// @name transformation into TAC
     /// @{
 
-    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next);
+    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end);
 
     /// @}
 
@@ -589,7 +589,7 @@ class CAstStatCall : public CAstStatement {
     /// @name transformation into TAC
     /// @{
 
-    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next);
+    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end);
 
     /// @}
 
@@ -668,7 +668,7 @@ class CAstStatReturn : public CAstStatement {
     /// @name transformation into TAC
     /// @{
 
-    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next);
+    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end);
 
     /// @}
 
@@ -750,7 +750,7 @@ class CAstStatIf : public CAstStatement {
     /// @name transformation into TAC
     /// @{
 
-    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next);
+    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end);
 
     /// @}
 
@@ -760,6 +760,57 @@ class CAstStatIf : public CAstStatement {
     CAstStatement *_elseBody;       ///< else body
 };
 
+//------------------------------------------------------------------------------
+/// @brief AST break statement node
+///
+/// node representing a break statement
+///
+
+class CAstStatBreak : public CAstStatement {
+  public:
+    /// @name constructors/destructors
+    /// @{
+
+    /// @param t token in input stream (used for error reporting purposes)
+    CAstStatBreak(CToken t);
+
+    /// @}
+
+    /// @name type management
+    /// @{
+
+    /// @brief perform type checking
+    /// @param t (out, optional) type error at token t
+    /// @param msg (out, optional) type error message
+    /// @retval true if no type error has been found
+    /// @retval false otherwise
+    virtual bool TypeCheck(CToken *t, string *msg) const;
+
+    /// @}
+
+    /// @name output
+    /// @{
+
+    /// @brief print the node to an output stream
+    /// @param out output stream
+    /// @param indent indentation
+    virtual ostream&  print(ostream &out, int indent=0) const;
+
+    /// @brief return the node's attributes in (dot) string format
+    /// @retval string node attributes as a string
+    virtual string dotAttr(void) const;
+
+    /// @}
+
+
+    /// @name transformation into TAC
+    /// @{
+
+    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end);
+
+    /// @}
+
+};
 
 //------------------------------------------------------------------------------
 /// @brief AST while statement node
@@ -827,7 +878,7 @@ class CAstStatWhile : public CAstStatement {
     /// @name transformation into TAC
     /// @{
 
-    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next);
+    virtual CTacAddr* ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end);
 
     /// @}
 

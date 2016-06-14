@@ -165,7 +165,7 @@ CAstModule* CParser::module(void)
   }
 
   Consume(tBegin);
-  CAstStatement *statseq = statSequence(m);
+  CAstStatement *statseq = statSequence(m, false);
   m->SetStatementSequence(statseq);
   Consume(tEnd);
   CToken idToken2;
@@ -181,13 +181,13 @@ CAstModule* CParser::module(void)
   return m;
 }
 
-CAstStatement* CParser::statSequence(CAstScope *s)
+CAstStatement* CParser::statSequence(CAstScope *s, bool isInLoop)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
   // statement ::= assignment | subroutineCall
-  // statement ::= ifStatement | whileStatement | returnStatement
-  // FIRST(statSequence) = { tId, tIf, tWhile, tReturn }
+  // statement ::= ifStatement | whileStatement | returnStatement | breakStatement
+  // FIRST(statSequence) = { tId, tIf, tWhile, tReturn, tBreak }
   // FOLLOW(statSequence) = { tElse, tEnd }
   //
   CAstStatement *head = NULL;
@@ -213,7 +213,7 @@ CAstStatement* CParser::statSequence(CAstScope *s)
           break;
         // statement ::= ifStatement
         case tIf:
-          st = ifStatement(s);
+          st = ifStatement(s, isInLoop);
           break;
         // statement ::= whileStatement
         case tWhile:
@@ -223,7 +223,13 @@ CAstStatement* CParser::statSequence(CAstScope *s)
         case tReturn:
           st = returnStatement(s);
           break;
-
+        case tBreak:
+          Consume(tBreak, &t);
+          if (!isInLoop) {
+            SetError(t, "break statement should be in loop");
+          }
+          st = new CAstStatBreak(t);
+          break;
         default:
           SetError(_scanner->Peek(), "statement expected.");
           break;
@@ -545,7 +551,7 @@ CAstSpecialOp* CParser::strConstant(CAstScope *s)
   return new CAstSpecialOp(t, opAddress, stringConstant); // wrap string by opAddress
 }
 
-CAstStatIf* CParser::ifStatement(CAstScope *s)
+CAstStatIf* CParser::ifStatement(CAstScope *s, bool isInLoop)
 {
   //
   // ifStatement ::= "if" "(" expression ")" "then" stateSequence [ "else" stateSequence ] "end"
@@ -564,12 +570,12 @@ CAstStatIf* CParser::ifStatement(CAstScope *s)
   condition = expression(s);
   Consume(tRBrak);
   Consume(tThen);
-  ifBody = statSequence(s);
+  ifBody = statSequence(s, isInLoop);
 
   tt = _scanner->Peek().GetType();
   if (tt == tElse){
     Consume(tElse);
-    elseBody = statSequence(s);
+    elseBody = statSequence(s, isInLoop);
   }
   Consume(tEnd);
 
@@ -612,7 +618,7 @@ CAstStatWhile* CParser::whileStatement(CAstScope *s)
   condition = expression(s);
   Consume(tRBrak);
   Consume(tDo);
-  body = statSequence(s);
+  body = statSequence(s, true);
   Consume(tEnd);
 
   return new CAstStatWhile(t, condition, body);
@@ -795,7 +801,7 @@ CAstProcedure* CParser::subroutineDecl(CAstScope *s)
   varDeclaration(n);
 
   Consume(tBegin);
-  CAstStatement* body = statSequence(n);
+  CAstStatement* body = statSequence(n, false);
   n->SetStatementSequence(body);
   Consume(tEnd);
 
