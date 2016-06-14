@@ -249,7 +249,7 @@ CTacAddr* CAstScope::ToTac(CCodeBlock *cb)
   CAstStatement *s = GetStatementSequence();
   while (s != NULL) {
     CTacLabel *next = cb->CreateLabel();
-    s->ToTac(cb, next);
+    s->ToTac(cb, next, NULL);
     cb->AddInstr(next);
     s = s->GetNext();
   }
@@ -376,7 +376,7 @@ CAstStatement* CAstStatement::GetNext(void) const
   return _next;
 }
 
-CTacAddr* CAstStatement::ToTac(CCodeBlock *cb, CTacLabel *next)
+CTacAddr* CAstStatement::ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end)
 {
   // nothing done
   cb->AddInstr(new CTacInstr(opGoto, next));
@@ -467,7 +467,7 @@ void CAstStatAssign::toDot(ostream &out, int indent) const
   out << ind << dotID() << "->" << _rhs->dotID() << ";" << endl;
 }
 
-CTacAddr* CAstStatAssign::ToTac(CCodeBlock *cb, CTacLabel *next)
+CTacAddr* CAstStatAssign::ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end)
 {
   // add three address code of left hand side, right hand side
   //     assignment instruction
@@ -520,7 +520,7 @@ void CAstStatCall::toDot(ostream &out, int indent) const
   _call->toDot(out, indent);
 }
 
-CTacAddr* CAstStatCall::ToTac(CCodeBlock *cb, CTacLabel *next)
+CTacAddr* CAstStatCall::ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end)
 {
   // add three address code of call
   GetCall()->ToTac(cb);
@@ -620,7 +620,7 @@ void CAstStatReturn::toDot(ostream &out, int indent) const
   }
 }
 
-CTacAddr* CAstStatReturn::ToTac(CCodeBlock *cb, CTacLabel *next)
+CTacAddr* CAstStatReturn::ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end)
 {
   // check if expression exists
   // add retrun instruction
@@ -753,7 +753,7 @@ void CAstStatIf::toDot(ostream &out, int indent) const
   }
 }
 
-CTacAddr* CAstStatIf::ToTac(CCodeBlock *cb, CTacLabel *next)
+CTacAddr* CAstStatIf::ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end)
 {
   // prepare labels
   CTacLabel* ifLabel = cb->CreateLabel();
@@ -768,7 +768,7 @@ CTacAddr* CAstStatIf::ToTac(CCodeBlock *cb, CTacLabel *next)
   // add three address code of statements until
   while (ifStats != NULL) {
     CTacLabel *next = cb->CreateLabel();
-    ifStats->ToTac(cb, next);
+    ifStats->ToTac(cb, next, end);
     cb->AddInstr(next);
     ifStats = ifStats->GetNext();
   }
@@ -778,12 +778,50 @@ CTacAddr* CAstStatIf::ToTac(CCodeBlock *cb, CTacLabel *next)
   // add three address code of statements until
   while (elseStats != NULL) {
     CTacLabel *next = cb->CreateLabel();
-    elseStats->ToTac(cb, next);
+    elseStats->ToTac(cb, next, end);
     cb->AddInstr(next);
     elseStats = elseStats->GetNext();
   }
   cb->AddInstr(endLabel);
   cb->AddInstr(new CTacInstr(opGoto, next));
+  return NULL;
+}
+
+//------------------------------------------------------------------------------
+// CAstStatBreak
+//
+CAstStatBreak::CAstStatBreak(CToken t)
+  : CAstStatement(t)
+{
+}
+
+bool CAstStatBreak::TypeCheck(CToken *t, string *msg) const
+{
+  return true; // doesn't need any type check
+}
+
+
+ostream& CAstStatBreak::print(ostream &out, int indent) const
+{
+  string ind(indent, ' ');
+
+  out << ind << "break" << endl;
+
+  return out;
+}
+
+string CAstStatBreak::dotAttr(void) const
+{
+  ostringstream out;
+  out << " [label=\"" << "break" << "\",shape=ellipse]";
+  return out.str();
+}
+
+CTacAddr* CAstStatBreak::ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end)
+{
+  assert(end != NULL);
+  // go to the end of the loop
+  cb->AddInstr(new CTacInstr(opGoto, end));
   return NULL;
 }
 
@@ -876,28 +914,28 @@ void CAstStatWhile::toDot(ostream &out, int indent) const
   }
 }
 
-CTacAddr* CAstStatWhile::ToTac(CCodeBlock *cb, CTacLabel *next)
+CTacAddr* CAstStatWhile::ToTac(CCodeBlock *cb, CTacLabel *next, CTacLabel* end)
 {
   // prepare labels
   CTacLabel* re = cb->CreateLabel();
   CTacLabel* body = cb->CreateLabel();
   CAstStatement *s = GetBody();
-  CTacLabel* end = cb->CreateLabel();
+  CTacLabel* loopEnd = cb->CreateLabel();
 
   // mark return label
   cb->AddInstr(re);
   // add three address code of condtion with true, false label
-  _cond->ToTac(cb, body, end);
+  _cond->ToTac(cb, body, loopEnd);
   cb->AddInstr(body);
   while (s != NULL) {
     CTacLabel *next = cb->CreateLabel();
-    s->ToTac(cb, next);
+    s->ToTac(cb, next, loopEnd);
     cb->AddInstr(next);
     s = s->GetNext();
   }
   // return to up after adding while statements
   cb->AddInstr(new CTacInstr(opGoto, re));
-  cb->AddInstr(end);
+  cb->AddInstr(loopEnd);
   cb->AddInstr(new CTacInstr(opGoto, next));
   return NULL;
 }

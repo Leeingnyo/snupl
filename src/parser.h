@@ -100,8 +100,9 @@ class CParser {
 
     /// @brief make statement sequence ast node
     /// @param CAstScope scope which ast node exists
+    /// @param bool isInLoop whether the statement is in loop
     /// @retval CAstStatement statement ast
-    CAstStatement*    statSequence(CAstScope *s);
+    CAstStatement*    statSequence(CAstScope *s, bool isInLoop);
 
     /// @brief make assignment ast node
     /// @param CAstScope scope which ast node exists
@@ -162,8 +163,9 @@ class CParser {
 
     /// @brief make if statement ast node
     /// @param CAstScope scope which ast node exists
+    /// @param bool isInLoop whether the statement is in loop
     /// @retval CAstStatIf if statement ast
-    CAstStatIf* ifStatement(CAstScope *s);
+    CAstStatIf* ifStatement(CAstScope *s, bool isInLoop);
 
     /// @brief make return statement ast node
     /// @param CAstScope scope which ast node exists
